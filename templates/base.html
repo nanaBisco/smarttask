@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>SmartTask</title>
+
+    <!-- LOCAL INTER FONT -->
+    <style>
+        @font-face {
+            font-family: 'Inter';
+            src: url('{{ url_for('static', filename='fonts/Inter-Regular.ttf') }}') format('truetype');
+            font-weight: 400;
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            src: url('{{ url_for('static', filename='fonts/Inter-SemiBold.ttf') }}') format('truetype');
+            font-weight: 600;
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            src: url('{{ url_for('static', filename='fonts/Inter-Bold.ttf') }}') format('truetype');
+            font-weight: 700;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background: #f8fafc;
+        }
+
+        .flash-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .flash {
+            padding: 12px;
+            border-radius: 6px;
+            color: white;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .success { background: #22c55e; }
+        .danger { background: #ef4444; }
+        .warning { background: #f59e0b; }
+    </style>
+
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+
+    <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+</head>
+
+<body>
+
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, msg in messages %}
+                    <div class="flash {{ category }}">{{ msg }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FLASH AUTO HIDE -->
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const flashes = document.querySelectorAll('.flash');
+            flashes.forEach(flash => {
+                setTimeout(() => {
+                    flash.style.opacity = '0';
+                    setTimeout(() => flash.remove(), 500);
+                }, 5000);
+            });
+        });
+    </script>
+
+    <!-- ========================= -->
+    <!-- CORE APP SCRIPT (SAFE) -->
+    <!-- ========================= -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // ----------------------------
+            // SOCKET INIT (ONLY ONCE)
+            // ----------------------------
+            window.socket = window.socket || io();
+            const socket = window.socket;
+
+            console.log("🧠 Socket initializing...");
+
+            socket.on("connect", () => {
+                console.log("✅ Socket connected:", socket.id);
+            });
+
+            // ----------------------------
+            // SOCKET EVENTS (SAFE BINDING)
+            // ----------------------------
+
+            socket.off("task_added");
+            socket.on("task_added", (data) => {
+                console.log("EVENT: task_added", data);
+                window.showToast?.(`✅ Task added: ${data.tasks.join(", ")}`, "success");
+            });
+
+            socket.off("task_completed");
+            socket.on("task_completed", (data) => {
+                console.log("EVENT: task_completed", data);
+                window.showToast?.("🎉 Task completed!", "success");
+            });
+
+            socket.off("task_deleted");
+            socket.on("task_deleted", (data) => {
+                console.log("EVENT: task_deleted", data);
+                window.showToast?.("🗑️ Task deleted", "danger");
+            });
+
+            socket.off("task_due");
+            socket.on("task_due", (data) => {
+                console.log("EVENT: task_due", data);
+                window.showToast?.(`⏰ ${data.title}`, "warning");
+
+                if (Notification.permission === "granted") {
+                    new Notification("⏰ Task Reminder", {
+                        body: data.title + " is due!",
+                        icon: "/static/icons/icon-192.png"
+                    });
+                }
+            });
+
+            // ----------------------------
+            // SERVICE WORKER
+            // ----------------------------
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/static/service-worker.js')
+                .then(() => console.log("✅ Service Worker Registered"))
+                .catch(err => console.log("SW Error:", err));
+            }
+
+            // ----------------------------
+            // PUSH PERMISSION
+            // ----------------------------
+            async function registerPush() {
+                try {
+                    const permission = await Notification.requestPermission();
+                    console.log(permission === "granted"
+                        ? "✅ Notifications enabled"
+                        : "❌ Notifications denied"
+                    );
+                } catch (err) {
+                    console.log("Notification error:", err);
+                }
+            }
+
+            window.addEventListener("load", async () => {
+                console.log("🚀 Page loaded");
+                await registerPush();
+            });
+
+            // ----------------------------
+            // SOUND
+            // ----------------------------
+            window.playSound = function () {
+                const audio = new Audio("/static/sounds/notify.wav");
+                audio.play().catch(() => {});
+            };
+
+            // ----------------------------
+            // LOCAL TASK CHECKER
+            // ----------------------------
+            function showTaskNotification(text) {
+                if (Notification.permission === "granted") {
+                    window.playSound();
+                    new Notification("⏰ SmartTask Reminder", {
+                        body: text,
+                        icon: "/static/icons/icon-192.png"
+                    });
+                }
+            }
+
+            function checkTasks() {
+                const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+                const now = Date.now();
+
+                tasks.forEach(task => {
+                    if (!task.dueTime) return;
+
+                    const due = new Date(task.dueTime).getTime();
+                    const diff = due - now;
+
+                    if (diff <= 300000 && diff > 0 && !task.warned) {
+                        showTaskNotification(`Upcoming: ${task.title}`);
+                        task.warned = true;
+                    }
+
+                    if (now >= due && !task.notified) {
+                        showTaskNotification(`"${task.title}" is due now!`);
+                        task.notified = true;
+                    }
+                });
+
+                localStorage.setItem("tasks", JSON.stringify(tasks));
+            }
+
+            setInterval(checkTasks, 10000);
+
+        });
+    </script>
+
+</body>
+</html>

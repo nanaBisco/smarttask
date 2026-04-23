@@ -1,0 +1,1732 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+:root {
+    --bg-color: #f4f6f9;
+    --card-color: white;
+    --text-color: #222;
+    --primary: #4f46e5;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --ai-bg: linear-gradient(135deg,#eef2ff,#e0e7ff);
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.header-actions .btn {
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+.theme-btn {
+    width: 40px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dark-mode {
+    --bg-color: #1e1e2f;
+    --card-color: #2c2c3e;
+    --text-color: #f1f1f1;
+    --primary: #6366f1;
+    --ai-bg: linear-gradient(135deg,#2c2c3e,#3a3a4e);
+}
+
+body {
+    background: var(--bg-color);
+    color: var(--text-color);
+    transition: 0.3s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.container{
+    max-width:700px;
+    width:90%;
+    margin:50px auto;
+    padding:35px;
+    border-radius:20px;
+    background:var(--card-color);
+    box-shadow:0 20px 50px rgba(0,0,0,0.25);
+}
+
+/* FORM */
+/* FIX TASK FORM LAYOUT */
+form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Task input takes most space */
+form input[name="task"] {
+    flex: 1;
+}
+
+/* Priority dropdown smaller */
+form select[name="priority"] {
+    flex: 1;
+    min-width: 90px;
+}
+
+/* =========================
+   ENHANCED TASK INPUT & PRIORITY
+   ========================= */
+form input[name="task"],
+form select[name="priority"] {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--input-border);
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    font-size: 14px;
+    transition: 0.25s ease;
+    outline: none;
+}
+
+select[name="priority"] {
+    width: 100%;
+    height: 40px;
+    font-size: 15px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+select[name="priority"] option {
+    color: #000; /* ensures visibility in dropdown */
+}
+
+select[name="priority"] {
+    display: flex;
+    align-items: center;
+}
+
+select[name="priority"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.add-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+form input[name="task"]::placeholder {
+    color: rgba(34,34,34,0.5);
+}
+
+.task-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+}
+
+/* TASK INPUT WRAPPER */
+.task-input-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 0; /* prevents overflow into dropdown */
+}
+
+.task-meta {
+    display: none;
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 4px;
+}
+
+.task:hover .task-meta {
+    display: block;
+}
+
+.task-title {
+    font-weight: 600;
+}
+
+/* INPUT WITH SPACE FOR ICON */
+.task-input-wrapper input[name="task"] {
+    width: 100%;
+    padding: 10px 90px 10px 12px; /* increased space for icon + breathing room */
+    box-sizing: border-box;
+}
+
+/* CALENDAR BUTTON */
+.calendar-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.05);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    color: inherit;
+}
+
+.calendar-btn:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+/* POPUP */
+.datetime-popup {
+    position: absolute;
+    top: 110%;
+    right: 0;
+    background: var(--card-color);
+    border: 1px solid var(--input-border);
+    padding: 10px;
+    border-radius: 10px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 100;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+#deadlinePicker,
+#timePicker {
+    display: none;
+}
+
+/* SHOW POPUP */
+.datetime-popup.active {
+    display: flex;
+}
+
+/* INPUTS INSIDE POPUP */
+.datetime-popup input {
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--input-text);
+}
+
+form select[name="priority"] {
+    appearance: none; /* remove default arrow */
+    background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='8'><path fill='%23333' d='M1 1l6 6 6-6'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px 8px;
+    cursor: pointer;
+}
+
+form input[name="task"]:focus,
+form select[name="priority"]:focus {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 6px rgba(79,70,229,0.25);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+    form input[name="task"],
+    form select[name="priority"] {
+        width: 100%;
+        flex: unset;
+    }
+}
+
+@media (max-width: 480px) {
+    form#addTaskForm,
+    form#addTaskForm input[name="task"],
+    form#addTaskForm select[name="priority"],
+    form#addTaskForm .add-btn {
+        width: 100%;
+        flex: unset;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .task-row {
+        align-items: stretch; /* fixes select clipping ONLY on mobile */
+    }
+
+    select[name="priority"] {
+        min-height: 48px;
+        height: auto; /* let it breathe */
+    }
+
+}
+
+:root {
+    --input-bg: #f9f9fb;
+    --input-text: #222;
+    --input-border: #ccc;
+    --input-focus: #4f46e5;
+}
+
+.dark-mode {
+    --input-bg: #2c2c3e;
+    --input-text: #f1f1f1;
+    --input-border: #555;
+    --input-focus: #6366f1;
+}
+
+/* =========================
+   TEXT + DROPDOWN CONTENT THEME FIX
+   ========================= */
+
+/* Input text & placeholder */
+form input[name="task"] {
+    color: var(--input-text);
+}
+
+form input[name="task"]::placeholder {
+    color: var(--input-text);
+    opacity: 0.5;
+}
+
+/* Dropdown text */
+form select[name="priority"] {
+    color: var(--input-text);
+}
+
+/* Dropdown options (important for dark mode) */
+form select[name="priority"] option {
+    background: var(--card-color);
+    color: var(--text-color);
+}
+
+
+/* Add button fixed size */
+form .add-btn {
+    flex: 0;
+    padding: 10px 14px;
+    white-space: nowrap;
+}
+
+/* BUTTONS */
+.btn{
+    padding:8px 12px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    color:white;
+    font-weight:600;
+    font-size:14px;
+    transition:0.2s ease;
+}
+
+.btn:hover{
+    transform:scale(1.05);
+    opacity:0.9;
+}
+
+.add-btn{ background:var(--primary); }
+.complete-btn{ background:var(--success); }
+.edit-btn{ background:var(--warning); }
+.delete-btn{ background:var(--danger); }
+
+/* TASK */
+.task{
+    background:var(--card-color);
+    padding:18px;
+    margin-bottom:12px;
+    border-radius:14px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    box-shadow:0 5px 15px rgba(0,0,0,0.06);
+    position: relative;
+}
+
+/* Task content */
+.task-content{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+}
+
+.task-content span.status{
+    font-size:12px;
+    opacity:0.8;
+}
+
+.task:hover{
+    transform:translateY(-2px);
+}
+
+/* Completed text */
+.completed{
+    text-decoration:line-through;
+    color:green;
+}
+
+/* PRIORITY TAGS - vibrant & centered */
+.priority-high, .priority-medium, .priority-low{
+    display:inline-block;
+    padding:6px 18px;
+    font-size:13px;
+    font-weight:700;
+    border-radius:50px;
+    text-align:center;
+    line-height:1.2;
+    flex-shrink:0;
+    color:white;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Vibrant gradients */
+.priority-high{ background: linear-gradient(135deg,#ff4d4f,#ef4444); }
+.priority-medium{ background: linear-gradient(135deg,#facc15,#f59e0b); }
+.priority-low{ background: linear-gradient(135deg,#34d399,#10b981); }
+
+/* Hover effect */
+.priority-high:hover, .priority-medium:hover, .priority-low:hover{
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+/* AI PANEL */
+.ai-panel{
+    background: var(--ai-bg);
+    padding:20px;
+    border-radius:16px;
+    margin-bottom:20px;
+    box-shadow:0 10px 25px rgba(79,70,229,0.1);
+}
+
+.ai-score{
+    font-size:26px;
+    font-weight:800;
+    color:var(--primary);
+}
+
+.ai-grid{
+    display:flex;
+    gap:15px;
+    margin-top:10px;
+}
+
+.ai-box{
+    flex:1;
+    background:var(--card-color);
+    padding:10px;
+    border-radius:8px;
+    text-align:center;
+}
+
+.chart-card{
+    background:var(--card-color);
+    padding:15px;
+    border-radius:14px;
+    margin-top:20px;
+}
+
+.chart-wrapper{
+    max-width:250px;
+    margin:20px auto 0 auto;
+    height:250px;
+}
+
+/* FLASH MESSAGES */
+.flash {
+    padding:12px;
+    margin:10px 0;
+    border-radius:6px;
+    color:white;
+}
+.success { background:#22c55e; }
+.danger { background:#ef4444; }
+.warning { background:#f59e0b; }
+
+@media (max-width: 480px) {
+    .priority-high, .priority-medium, .priority-low {
+        font-size: 14px; 
+        padding: 8px 16px;
+    }
+
+    .chart-wrapper {
+        max-width: 200px;
+        height:200px;
+    }
+
+    .container {
+        padding: 20px;
+    }
+}
+
+/* =========================
+   FULL MOBILE RESPONSIVENESS
+   ========================= */
+@media (max-width: 480px) {
+
+    /* Container adjustments */
+    .container {
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    /* Forms stack vertically */
+    form {
+        flex-direction: column;
+    }
+
+    input, select, button {
+        width: 100%;
+        flex: unset;
+    }
+
+    @media (max-width: 480px) {
+    form {
+        flex-wrap: wrap;
+    }
+
+    form input[name="task"] {
+        flex: 100%;
+    }
+
+    form select[name="priority"] {
+        flex: 1;
+    }
+
+    form .add-btn {
+        flex: 1;
+    }
+}
+
+button, input, select {
+    font-size: 14px;
+}
+
+    /* Task content stack */
+    .task-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* Task actions wrap */
+    .task-actions {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    /* Charts resize */
+    .chart-wrapper {
+        max-width: 100%;
+        height: 200px;
+    }
+
+    #weeklyChart {
+        max-width: 100%;
+        height: 200px;
+    }
+
+    /* Priority tags smaller */
+    .priority-high, .priority-medium, .priority-low {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    /* Buttons smaller */
+    .btn {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+}
+
+/* HEADER BUTTON LAYOUT */
+.header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* THEME BUTTON SIZE */
+.theme-btn {
+    width: 40px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* ICON ANIMATION */
+.theme-btn svg {
+    transition: transform 0.4s ease, opacity 0.3s ease;
+}
+
+/* CLICK ANIMATION */
+.theme-btn.active svg {
+    transform: rotate(180deg) scale(1.1);
+}
+
+/* DARK MODE EFFECT (matches your app) */
+body.dark-mode .theme-btn {
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.15);
+}
+
+@media (max-width: 480px) {
+
+    /* Stack form fields vertically */
+    form#addTaskForm {
+        flex-direction: column;
+        gap: 12px;
+        padding: 10px 0;
+    }
+
+    /* Full width inputs with nice shadows */
+    form#addTaskForm input[name="task"],
+    form#addTaskForm select[name="priority"] {
+        width: 100%;
+        flex: unset;
+        padding: 12px 14px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-sizing: border-box;
+    }
+
+    /* Add button full width and slightly lifted */
+    form#addTaskForm .add-btn {
+        width: 100%;
+        flex: unset;
+        padding: 12px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(79,70,229,0.2);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    form#addTaskForm .add-btn:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 6px 16px rgba(79,70,229,0.25);
+    }
+}
+
+.reminder {
+    background: linear-gradient(135deg,#fff7ed,#ffedd5);
+    border-left: 5px solid #f59e0b;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #92400e;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.task-list {
+  max-height: calc(100vh - 100px); /* leave space for input bar */
+  overflow-y: auto;
+  padding-right: 5px; /* avoid scrollbar overlap */
+}
+
+.task-list {
+  max-height: calc(100vh - 100px); /* leave space for input bar */
+  overflow-y: auto;
+  padding-right: 5px; /* avoid scrollbar overlap */
+}
+
+/* ===============================
+   Mobile & Foldable-Friendly Task Form
+   =============================== */
+@media (max-width: 800px) {
+
+    /* Stack form fields vertically */
+    form#addTaskForm {
+        flex-direction: column;
+        gap: 14px;
+        padding: 12px 0;
+    }
+
+    /* Full width inputs with shadows & rounded corners */
+    form#addTaskForm input[name="task"],
+    form#addTaskForm select[name="priority"] {
+        width: 100%;
+        flex: unset;
+        padding: 14px 16px;
+        border-radius: 14px;
+        box-shadow: 0 5px 16px rgba(0,0,0,0.1);
+        box-sizing: border-box;
+        transition: all 0.2s ease;
+    }
+
+    /* Add button full width, rounded, and interactive shadow */
+    form#addTaskForm .add-btn {
+        width: 100%;
+        flex: unset;
+        padding: 14px;
+        border-radius: 14px;
+        box-shadow: 0 5px 16px rgba(79,70,229,0.2);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    form#addTaskForm .add-btn:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 7px 20px rgba(79,70,229,0.25);
+    }
+
+    /* Optional: Slightly larger font for readability on foldables */
+    form#addTaskForm input[name="task"],
+    form#addTaskForm select[name="priority"],
+    form#addTaskForm .add-btn {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .task-input-wrapper input[type="text"] {
+        padding: 10px 50px 10px 10px;
+        font-size: 13px;
+    }
+
+    .calendar-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 720px) {
+  .task-info h3 {
+    font-size: 14px;
+  }
+  
+  .task-card {
+    padding: 10px;
+  }
+
+  input[type="text"], button {
+    font-size: 14px;
+    padding: 10px;
+  }
+}
+
+/* =========================
+   MOBILE OPTIMIZATION
+========================= */
+@media (max-width: 600px) {
+
+    /* Stack layout vertically */
+    .task-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    /* Full width input */
+    .task-input-wrapper {
+        width: 100%;
+    }
+
+    /* Bigger tap-friendly input */
+    .task-input-wrapper input[name="task"] {
+        padding: 12px 90px 12px 12px;
+        font-size: 16px; /* prevents zoom on mobile */
+    }
+
+    /* Calendar button (bigger tap area) */
+    .calendar-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        right: 6px;
+    }
+
+    /* Popup full width feel */
+    .datetime-popup {
+        width: 65%;
+        right: 0;
+        left: auto;
+        top: 105%;
+        border-radius: 12px;
+    }
+
+    /* Inputs inside popup */
+    .datetime-popup input {
+        width: 100%;
+        font-size: 14px;
+    }
+
+    /* Priority dropdown full width */
+    select[name="priority"] {
+        width: 100%;
+        height: 42px;
+        font-size: 15px;
+    }
+
+    /* Add button full width */
+    .add-btn {
+        width: 100%;
+        height: 45px;
+        font-size: 16px;
+    }
+}
+
+.task-input-wrapper input:focus {
+    outline: none;
+    border: 1px solid #4CAF50;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 600px) {
+
+    /* Only style when JS sets display:flex inline */
+    .edit-form[style*="display: flex"] {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* Equal size for input + select */
+    .edit-form input[name="task"],
+    .edit-form select[name="priority"] {
+        width: 100%;
+        height: 44px;
+        font-size: 15px;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+
+    /* Optional: buttons alignment */
+    .edit-form .btn {
+        width: 100%;
+        height: 44px;
+    }
+}
+
+/* 🔔 TOAST BASE */
+.toast {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    padding: 14px 16px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 500;
+
+    width: 100%;
+    max-width: 420px;
+
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+/* 🧠 MESSAGE TEXT */
+.toast-text {
+    flex: 1;
+    font-size: 14px;
+}
+
+/* 🔁 UNDO BUTTON */
+.toast-action {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+@media (max-width: 480px) {
+
+    .flash-container {
+        position: fixed;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        padding: 0 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .flash, .toast {
+        width: 100%;
+        max-width: 320px; /* 🔥 control size */
+        margin: 0 auto;
+        border-radius: 8px;
+    }
+}
+
+/* =========================
+   SMARTTASK MOBILE UI FIX
+   ========================= */
+
+@media (max-width: 600px) {
+
+    /* GLOBAL SAFETY */
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        overflow-x: hidden;
+        font-size: 14px;
+        background: #0f172a; /* keep your dark SaaS feel */
+    }
+
+    /* MAIN CONTAINER */
+    .container,
+    .main,
+    .dashboard,
+    #app {
+        width: 100%;
+        padding: 12px;
+        box-sizing: border-box;
+    }
+
+    /* HEADER */
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .header h1 {
+        font-size: 18px;
+    }
+
+    /* CARDS (STATS / INSIGHTS) */
+    .card {
+        width: 100%;
+        border-radius: 14px;
+        padding: 12px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    /* TASK INPUT BAR */
+    .task-input {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .task-input input,
+    .task-input button {
+        width: 100%;
+        font-size: 14px;
+        padding: 12px;
+        border-radius: 10px;
+        box-sizing: border-box;
+    }
+
+    /* TASK LIST */
+    .task-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .task-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .task-item p {
+        width: 100%;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    /* BUTTONS */
+    button {
+        font-size: 13px;
+        padding: 8px 10px;
+        border-radius: 8px;
+    }
+
+    .task-actions {
+        display: flex;
+        gap: 6px;
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    /* TOAST FIX (IMPORTANT since you had issues earlier) */
+    .toast {
+        width: 90%;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: auto;
+        top: 10px;
+        font-size: 13px;
+        padding: 10px;
+    }
+
+    /* SAFE AREA FOR iPhones (notch fix) */
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+</style>
+
+<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/confetti.js') }}"></script>
+
+<div class="container">
+
+    <h2>👋 Welcome, {{ username }}</h2>
+
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h1>SmartTask</h1>
+        <div class="header-actions">
+    <a href="#" class="btn delete-btn" id="logoutBtn">Logout</a>
+
+    <button type="button" class="theme-btn" onclick="toggleTheme()">
+        <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="5" fill="currentColor"/>
+        </svg>
+    </button>
+</div>
+    </div>
+    <button id="installBtn" class="btn add-btn" style="display:none;">
+    📲 Install App
+</button>
+
+    <!-- AI PANEL -->
+    <div class="ai-panel">
+        <div class="ai-score" id="aiScore">Score: {{ insight.score }}%</div>
+        <div class="ai-grid">
+            <div class="ai-box" id="aiTotal">Total<br><b>{{ insight.total }}</b></div>
+            <div class="ai-box" id="aiCompleted">Completed<br><b>{{ insight.completed }}</b></div>
+            <div class="ai-box" id="aiPending">Pending<br><b>{{ insight.pending }}</b></div>
+            <div class="ai-box" id="aiHigh">High<br><b>{{ insight.high_priority }}</b></div>
+        </div>
+        <p><b id="aiSuggestion">💡 {{ insight.suggestion }}</b></p>
+    </div>
+
+    <div id="reminderBox" style="margin-bottom:15px;"></div>
+
+    <!-- ADD TASK -->
+    <form id="addTaskForm">
+    <div class="task-row">
+        
+        <div class="task-input-wrapper">
+            <input type="text" name="task" class="task-input" placeholder="Type tasks naturally..." required>
+
+            <button type="button" class="calendar-btn" onclick="toggleDateTimePicker()">
+                📅
+            </button>
+
+            <div class="datetime-popup" id="datetimePopup">
+                <input type="date" name="deadline">
+            </div>
+        </div>
+
+        <select name="priority" class="priority-select" required>
+            <option value="" disabled selected>Select Priority</option>
+            <option>Low</option>
+            <option>Medium</option>
+            <option>High</option>
+        </select>
+
+        <button type="submit" class="btn add-btn">Add</button>
+
+    </div>
+    </form>
+
+    <!-- TASK LIST -->
+    <div id="taskList"></div>
+
+    <!-- CHARTS -->
+    <div class="chart-card">
+        <h3>📊 Productivity Overview</h3>
+        <div class="chart-wrapper">
+            <canvas id="taskChart"></canvas>
+        </div>
+        <canvas id="weeklyChart" style="margin-top:20px;"></canvas>
+    </div>
+
+</div>
+<div id="toastContainer" style="position:fixed; top:20px; right:20px; z-index:999;"></div>
+
+<script>
+const socket = window.socket;
+
+if (!socket) {
+    console.error("❌ Socket not ready yet");
+} else {
+    console.log("✅ Socket ready in this script");
+}
+
+// ----------------------------
+// PUSH NOTIFICATIONS SETUP
+// ----------------------------
+
+async function subscribeUserToPush() {
+    if (!('serviceWorker' in navigator)) return;
+
+    const registration = await navigator.serviceWorker.ready;
+
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array("{{ vapid_public_key }}")
+        });
+
+        // Send subscription to backend
+        await fetch("/subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(subscription)
+        });
+
+        console.log("✅ Push subscription saved");
+    }
+}
+
+// Helper function (required for VAPID key conversion)
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
+
+// Call it on load
+subscribeUserToPush();
+
+// Debounce helper to batch chart updates
+let updateChartTimeout;
+function scheduleChartUpdate(force = false) {
+    if (updateChartTimeout) clearTimeout(updateChartTimeout);
+
+    const delay = force ? 0 : 200; // 0ms if forced, 200ms otherwise
+    updateChartTimeout = setTimeout(() => {
+        fetch("/api/tasks")
+            .then(res => {
+                if (!res.ok) throw new Error("Request failed");
+                return res.json();
+            })
+            .then(info => {
+                if (window.weeklyChart) {
+                    weeklyChart.data.labels = [...info.days];
+                    weeklyChart.data.datasets[0].data = [...info.weekly];
+                    weeklyChart.update();
+                }
+            });
+    }, delay);
+}
+
+// ----------------------------
+// SOCKET LISTENERS (FIXED)
+// ----------------------------
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    function initSocketListeners() {
+        const socket = window.socket;
+
+        if (!socket) {
+            console.warn("⏳ Waiting for socket...");
+            setTimeout(initSocketListeners, 200); // retry
+            return;
+        }
+
+        console.log("🔥 Attaching socket listeners...");
+
+        // 🔹 TASK ADDED
+        socket.off("task_added");
+        socket.on("task_added", (data) => {
+            console.log("EVENT: task_added", data);
+            window.showToast?.(`✅ Task added: ${data.tasks.join(", ")}`, "success");
+        });
+
+        // 🔹 TASK COMPLETED
+        socket.off("task_completed");
+        socket.on("task_completed", (data) => {
+            console.log("EVENT: task_completed", data);
+            window.showToast?.("🎉 Task completed!", "success");
+        });
+
+        // 🔹 TASK UPDATED ✅ (THIS WAS FAILING BEFORE)
+        socket.off("task_updated");
+        socket.on("task_updated", (data) => {
+            console.log("EVENT: task_updated", data);
+            window.showToast?.("✏️ Task updated successfully", "success");
+        });
+
+        // 🔹 TASK DELETED
+        socket.off("task_deleted");
+        socket.on("task_deleted", (data) => {
+            console.log("EVENT: task_deleted", data);
+            window.showToast?.("🗑️ Task deleted", "danger");
+        });
+
+        // 🔹 TASK DUE
+        socket.off("task_due");
+        socket.on("task_due", (data) => {
+            console.log("EVENT: task_due", data);
+            window.showToast?.(`⏰ ${data.title}`, "warning");
+        });
+    }
+
+    // Start listener init
+    initSocketListeners();
+});
+
+// Initial chart update on page load
+document.addEventListener("DOMContentLoaded", () => {
+    scheduleChartUpdate(true);
+});
+
+function toggleTheme() {
+    const icon = document.getElementById("themeIcon");
+    const btn = document.querySelector(".theme-btn");
+
+    const isDark = document.body.classList.toggle("dark-mode");
+
+    // SAVE THEME
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+
+    btn.classList.toggle("active");
+
+    // FADE OUT
+    icon.style.opacity = "0";
+
+    setTimeout(() => {
+        // CHANGE ICON
+        icon.innerHTML = isDark
+            ? '<path d="M21 12.79A9 9 0 0111.21 3c0 .34-.02.67-.05 1A7 7 0 1019 13c.33-.03.66-.05 1-.05z" fill="currentColor"/>'
+            : '<circle cx="12" cy="12" r="5" fill="currentColor"/>';
+
+        // FADE IN
+        icon.style.opacity = "1";
+    }, 150);
+}
+
+function toggleDateTimePicker(){
+    const popup = document.getElementById("datetimePopup");
+    popup.classList.toggle("active");
+}
+
+// CLOSE WHEN CLICKING OUTSIDE
+document.addEventListener("click", function(e){
+    const popup = document.getElementById("datetimePopup");
+    const wrapper = document.querySelector(".task-input-wrapper");
+
+    if(!wrapper.contains(e.target)){
+        popup.classList.remove("active");
+    }
+});
+
+document.querySelectorAll("#datetimePopup input").forEach(input=>{
+    input.addEventListener("change", ()=>{
+        document.getElementById("datetimePopup").classList.remove("active");
+    });
+});
+
+window.onload = function(){
+    const savedTheme = localStorage.getItem("theme");
+
+    if(savedTheme === "dark"){
+        document.body.classList.add("dark-mode");
+
+        const icon = document.getElementById("themeIcon");
+        if(icon){
+            icon.innerHTML = '<path d="M21 12.79A9 9 0 0111.21 3c0 .34-.02.67-.05 1A7 7 0 1019 13c.33-.03.66-.05 1-.05z" fill="currentColor"/>';
+        }
+    }
+};
+
+window.showToast = function(message, type="info") {
+    const toast = document.createElement("div");
+    toast.innerText = message;
+
+    toast.style.padding = "12px 18px";
+    toast.style.marginBottom = "10px";
+    toast.style.borderRadius = "10px";
+    toast.style.color = "white";
+    toast.style.fontWeight = "600";
+    toast.style.boxShadow = "0 8px 20px rgba(0,0,0,0.25)";
+    toast.style.transform = "translateY(-10px)";
+    toast.style.opacity = "0";
+    toast.style.transition = "all 0.25s ease";
+
+    if(type==="success") toast.style.background="#22c55e";
+    else if(type==="danger") toast.style.background="#ef4444";
+    else if(type==="warning") toast.style.background="#f59e0b";
+    else toast.style.background="#4f46e5";
+
+    document.getElementById("toastContainer").appendChild(toast);
+
+    // animate in
+    requestAnimationFrame(() => {
+        toast.style.opacity = "1";
+        toast.style.transform = "translateY(0)";
+    });
+
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(-10px)";
+        setTimeout(() => toast.remove(), 250);
+    }, 3000);
+};
+
+window.showUndoToast = function(message, onUndo) {
+    const toast = document.createElement("div");
+
+    toast.style.display = "flex";
+    toast.style.alignItems = "center";
+    toast.style.justifyContent = "space-between";
+    toast.style.gap = "12px";
+
+    toast.style.padding = "14px 16px";
+    toast.style.marginBottom = "10px";
+    toast.style.borderRadius = "12px";
+    toast.style.background = "rgba(30,30,40,0.95)";
+    toast.style.backdropFilter = "blur(10px)";
+    toast.style.color = "white";
+    toast.style.fontWeight = "500";
+    toast.style.boxShadow = "0 10px 30px rgba(0,0,0,0.3)";
+    toast.style.minWidth = "240px";
+    toast.style.maxWidth = "320px";
+    toast.style.animation = "slideIn 0.25s ease";
+
+    toast.innerHTML = `
+        <span style="font-size:14px;">${message}</span>
+        <button style="
+            background: #4f46e5;
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        ">Undo</button>
+    `;
+
+    const btn = toast.querySelector("button");
+
+    btn.onmouseover = () => btn.style.transform = "scale(1.05)";
+    btn.onmouseout = () => btn.style.transform = "scale(1)";
+
+    btn.onclick = () => {
+        onUndo();
+        toast.remove();
+    };
+
+    document.getElementById("toastContainer").appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(20px)";
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+};
+
+// LOGOUT
+function logout(){
+    window.location.href="/logout";
+}
+
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('installBtn').style.display = 'block';
+});
+
+document.getElementById('installBtn').addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt = null;
+    }
+});
+
+// Charts
+const taskCtx = document.getElementById('taskChart');
+const weeklyCtx = document.getElementById('weeklyChart');
+
+let taskChart = null;
+let weeklyChart = null;
+
+if (taskCtx && weeklyCtx) {
+
+    taskChart = new Chart(taskCtx, {
+        type: 'doughnut',
+        data: {
+            labels:['Completed','Pending'],
+            datasets:[{
+                data:[0,0],
+                backgroundColor:['rgba(34,197,94,0.95)','rgba(239,68,68,0.95)'],
+                borderColor:['#22c55e','#ef4444'],
+                borderWidth:2,
+                hoverOffset:12
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: { legend: { position: 'bottom', labels:{ padding:15, usePointStyle:true } } }
+        }
+    });
+
+    weeklyChart = new Chart(weeklyCtx, {
+        type:'bar',
+        data:{ labels:[], datasets:[{label:'Tasks Completed', data:[], borderRadius:6, backgroundColor:'#6366f1'}] },
+        options:{ 
+            responsive:true,
+            animation:false,
+            plugins:{ legend:{ display:false } }, 
+            scales:{ 
+                y:{ 
+                    beginAtZero:true, 
+                    ticks:{ stepSize:1 }
+                } 
+            } 
+        }
+    });
+
+}
+
+function updateTaskChart(completed, pending) {
+    taskChart.data.datasets[0].data = [completed, pending];
+    taskChart.update();
+}
+
+function updateWeeklyChart(labels, data) {
+    console.log("Weekly Chart Updating:", labels, data);
+
+    if (!weeklyChart || !labels || !data) return;
+
+    weeklyChart.data.labels = [...labels];
+    weeklyChart.data.datasets[0].data = [...data];
+
+    weeklyChart.update();
+}
+
+// Dashboard updater
+function updateDashboard(){
+    fetch('/api/tasks')
+    .then(res => {
+        if (!res.ok) throw new Error("API failed");
+        return res.json();
+    })
+    .then(data=>{
+        if (!data.tasks || !Array.isArray(data.tasks)) {
+            console.error("Invalid API data:", data);
+            return;
+        }
+
+        const taskList = document.getElementById('taskList');
+        taskList.innerHTML = '';
+
+        data.tasks.forEach(task=>{
+            const div = document.createElement('div');
+            div.className = 'task';
+            div.dataset.id = task.id;
+
+            div.innerHTML = `
+                <div class="task-content">
+                    <span class="status ${task.status.toLowerCase()}">${task.status}</span>
+
+                    <div class="task-text">
+                        <span class="task-title">${task.task}</span>
+
+                        <div class="task-meta">
+                            <small>🕒 Created: ${task.created_at || "N/A"}</small>
+                            <small>⏰ Due: ${task.deadline || "No date"}</small>
+                        </div>
+                    </div>
+
+                    <span class="priority-${task.priority.toLowerCase()}">${task.priority}</span>
+                </div>
+                <div class="task-actions" style="display:flex; gap:6px;">
+                    ${task.status!=='Completed'?`<a href="/complete/${task.id}" class="btn complete-btn">✓</a>`: ''}
+                    <a href="#" class="btn edit-btn">Edit</a>
+                    <a href="#" class="btn delete-btn">X</a>
+                </div>
+                <form class="edit-form" style="display:none; margin-top:10px;">
+                    <input type="text" name="task" value="${task.task}" required>
+
+                    <input type="date" name="deadline" value="${task.deadline || ''}">
+
+                    <select name="priority">
+                        <option${task.priority=='Low'?' selected':''}>Low</option>
+                        <option${task.priority=='Medium'?' selected':''}>Medium</option>
+                        <option${task.priority=='High'?' selected':''}>High</option>
+                    </select>
+                    <button type="submit" class="btn add-btn">Save</button>
+                    <button type="button" class="btn delete-btn cancel-edit">Cancel</button>
+                </form>
+            `;
+            taskList.appendChild(div);
+        });
+
+        const reminderBox = document.getElementById('reminderBox');
+        reminderBox.innerHTML = '';
+
+        if (data.reminders && data.reminders.length > 0) {
+            data.reminders.forEach(r => {
+                const div = document.createElement('div');
+                div.className = 'reminder';
+                div.innerText = r;
+                reminderBox.appendChild(div);
+            });
+        }
+
+        // Charts update
+        if (taskChart) {
+        taskChart.data.datasets[0].data = [data.completed, data.pending];
+        taskChart.update();
+        }
+        if (typeof weeklyChart !== "undefined" && weeklyChart) {
+            updateWeeklyChart(data.days, data.weekly);
+        }
+
+        // AI panel update
+        document.getElementById('aiScore').innerHTML = `Score: ${data.score}%`;
+        document.getElementById('aiTotal').innerHTML = `Total<br><b>${data.total}</b>`;
+        document.getElementById('aiCompleted').innerHTML = `Completed<br><b>${data.completed}</b>`;
+        document.getElementById('aiPending').innerHTML = `Pending<br><b>${data.pending}</b>`;
+        document.getElementById('aiHigh').innerHTML = `High<br><b>${data.high_priority}</b>`;
+        document.getElementById('aiSuggestion').innerHTML = `💡 ${data.suggestion}`;
+
+        // Event listeners
+        // ----------------------------
+        // 2️⃣ Complete Task Button
+        // ----------------------------
+        document.querySelectorAll('.complete-btn').forEach(btn => {
+
+            function handleAction(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                console.log("✅ COMPLETE CLICKED");
+
+                confetti({ particleCount: 100, spread: 70 });
+
+                fetch(btn.href, {
+                    method: 'GET',
+                    credentials: 'same-origin'
+                })
+                .then(res => res.json())
+                .then(() => updateDashboard())
+                .catch(err => console.error("Complete Task error:", err));
+            }
+
+            // 🔥 MOBILE TAP (main fix)
+            btn.addEventListener("touchstart", handleAction);
+
+            // 🖥️ DESKTOP CLICK
+            btn.addEventListener("click", handleAction);
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.onclick = function (e) {
+                e.stopPropagation(); // 🔥 CRITICAL for mobile
+
+                const taskDiv = this.closest('.task');
+                const taskId = taskDiv.dataset.id;
+
+                lastDeletedTask = { id: taskId };
+
+                taskDiv.remove();
+
+                deleteTimeout = setTimeout(() => {
+                    fetch(`/delete/${taskId}`, {
+                        method: "GET",
+                        credentials: "same-origin"
+                    })
+                    .then(() => updateDashboard())
+                    .catch(err => console.error("Delete error:", err));
+                }, 5000);
+
+                showUndoToast("🗑️ Task deleted", () => {
+                    clearTimeout(deleteTimeout);
+                    updateDashboard();
+                    lastDeletedTask = null;
+                });
+            };
+        });
+
+        // Edit button behavior
+        document.querySelectorAll('.edit-btn').forEach(btn=>{
+            btn.onclick = function(e){
+                e.preventDefault();
+                e.stopPropagation(); // 🔥 FIX: stops card click on mobile
+                const taskDiv = this.closest('.task');
+                taskDiv.querySelector('.task-content').style.display='none';
+                taskDiv.querySelector('.task-actions').style.display='none';
+                taskDiv.querySelector('.edit-form').style.display='flex';
+            }
+        });
+
+        // Cancel edit restores values
+        document.querySelectorAll('.cancel-edit').forEach(btn=>{
+            btn.onclick = function(){
+                const taskDiv = this.closest('.task');
+                taskDiv.querySelector('.task-content').style.display='flex';
+                taskDiv.querySelector('.task-actions').style.display='flex';
+                taskDiv.querySelector('.edit-form').style.display='none';
+            }
+        });
+
+        // ----------------------------
+        // 3️⃣ Edit / Save Task
+        // ----------------------------
+        document.querySelectorAll('.edit-form').forEach(form => {
+            form.onsubmit = function (e) {
+                e.preventDefault();
+                e.stopPropagation(); // 🔥 FIX: stops card click on mobile
+
+                const taskDiv = this.closest('.task');
+                const formData = new FormData(this);
+
+                // 🔹 Build payload cleanly
+                const payload = new FormData();
+                payload.append("task", formData.get("task"));
+                payload.append("priority", formData.get("priority"));
+                payload.append("deadline", formData.get("deadline") || "");
+
+                fetch(`/edit/${taskDiv.dataset.id}`, {
+                    method: 'POST',
+                    body: payload,
+                    credentials: 'same-origin'   // ✅ keep session
+                })
+                .then(res => res.json())
+                .then(data => {
+                    console.log("✅ Edit response:", data);
+
+                    // ⚠️ IMPORTANT: delay dashboard update slightly
+                    // so socket event can fire first
+                    setTimeout(() => {
+                        updateDashboard();
+                    }, 150);
+                })
+                .catch(err => console.error("Edit Task error:", err));
+            };
+        });
+    });
+}
+
+let lastDeletedTask = null;
+let deleteTimeout = null;
+
+document.addEventListener("click", function(e){
+
+    const deleteBtn = e.target.closest(".delete-btn");
+
+    if(!deleteBtn || deleteBtn.classList.contains("cancel-edit")) return;
+
+    console.log("UNDO DELETE HANDLER RUNNING");
+
+    e.preventDefault();
+
+    const taskDiv = deleteBtn.closest(".task");
+    const taskId = taskDiv.dataset.id;
+
+    // Save task id only
+    lastDeletedTask = taskId;
+
+    // Remove instantly (for UX)
+    taskDiv.remove();
+
+    // Show undo toast
+    console.log("SHOWING UNDO TOAST");
+    showUndoToast("Task deleted", () => {
+        clearTimeout(deleteTimeout);   // stop deletion
+        updateDashboard();             // reload everything correctly
+        lastDeletedTask = null;
+    });
+
+    // After 5 seconds → delete from backend
+    deleteTimeout = setTimeout(() => {
+        if (lastDeletedTask) {
+            fetch(`/delete/${taskId}`)
+                .then(() => updateDashboard());
+
+            lastDeletedTask = null;
+        }
+    }, 5000);
+});
+
+// Add task form
+// ----------------------------
+// 1️⃣ Add / AI Add Task
+// ----------------------------
+document.getElementById('addTaskForm').onsubmit = function(e){
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    // Only send fields backend expects
+    const payload = new FormData();
+    payload.append("task", formData.get("task"));
+    payload.append("priority", formData.get("priority"));
+    payload.append("deadline", formData.get("deadline") || "");
+
+    fetch('/ai_add', { method:'POST', body: payload, credentials:'same-origin' })
+        .then(res => res.json())
+        .then(()=> updateDashboard())
+        .catch(err => console.error("Add Task error:", err));
+
+    this.reset();
+};
+
+// Initial load
+updateDashboard();
+
+document.getElementById("logoutBtn").addEventListener("click", function(e){
+    e.preventDefault();
+
+    // Stop dashboard updates
+    if (window.dashboardInterval) {
+    clearInterval(window.dashboardInterval);
+    window.dashboardInterval = null; // prevents duplicate intervals later
+}
+
+    // Force navigation
+    window.location.href = "/logout";
+});
+
+if (typeof Chart === 'undefined') {
+    console.error("Chart.js failed to load");
+}
+
+</script>
+
+{% endblock %}

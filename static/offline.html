@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Offline - SmartTask</title>
+    <style>
+        body{
+            margin:0;
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            font-family:'Inter',sans-serif;
+            background:#0f172a;
+            color:white;
+            text-align:center;
+        }
+
+        .box{
+            padding:30px;
+            border-radius:20px;
+            background:rgba(255,255,255,0.05);
+            backdrop-filter:blur(10px);
+        }
+
+        h1{
+            font-size:22px;
+            margin-bottom:10px;
+        }
+
+        p{
+            opacity:0.8;
+        }
+
+        button{
+            margin-top:15px;
+            padding:10px 20px;
+            border:none;
+            border-radius:10px;
+            background:#4f46e5;
+            color:white;
+            cursor:pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <h1>📡 You're Offline</h1>
+        <p>SmartTask can't connect right now.</p>
+        <button onclick="location.reload()">Try Again</button>
+    </div>
+</body>
+</html>

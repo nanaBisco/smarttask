@@ -1,0 +1,7 @@
+Flask
+Flask-SocketIO
+Werkzeug
+python-dotenv
+pywebpush
+APScheduler
+eventlet
