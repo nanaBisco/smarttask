@@ -885,6 +885,7 @@ if __name__ == "__main__":
     import socket
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
+    if os.getenv("FLASK_ENV") == "development":
     print(f"Your app is accessible at http://{local_ip}:5000")
     
     print("🌍 ENV:", env)

@@ -1727,6 +1727,9 @@ if (typeof Chart === 'undefined') {
     console.error("Chart.js failed to load");
 }
 
+if (location.hostname === "localhost") {
+    console.log("Debug info...");
+}
 </script>
 
 {% endblock %}
