@@ -5,10 +5,21 @@
 
 # Database
 *.db
+*.db-journal
 
 # Python cache
 __pycache__/
 *.pyc
+
+# Virtual environments
+venv/
+env/
+
+# Flask instance folder
+instance/
+
+# Logs
+*.log
 
 # OS
 .DS_Store
