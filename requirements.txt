@@ -5,3 +5,4 @@ python-dotenv
 pywebpush
 APScheduler
 eventlet
+gunicorn
