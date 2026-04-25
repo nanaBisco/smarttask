@@ -109,6 +109,8 @@ def init_db():
     conn.commit()
     conn.close()
 
+init_db()
+
 # ----------------------------
 # SUBSCRIPTIONS
 # ----------------------------
@@ -880,17 +882,18 @@ scheduler.start()
 # ----------------------------
 # RUN
 # ----------------------------
-if __name__ == "__main__":
-    init_db()
-    import socket
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
-    if os.getenv("FLASK_ENV") == "development":
-    print(f"Your app is accessible at http://{local_ip}:5000")
-    
-    print("🌍 ENV:", env)
-    print("🔗 BASE_URL:", os.getenv("BASE_URL"))
-    
-    debug_mode = os.getenv("FLASK_ENV") == "development"
-    port = int(os.environ.get("PORT", 5000))
-    socketio.run(app, host="0.0.0.0", port=port)
+#if __name__ == "__main__":
+ #   init_db()
+  #  import socket
+   # hostname = socket.gethostname()
+    #local_ip = socket.gethostbyname(hostname)
+#
+ #   if os.getenv("FLASK_ENV") == "development":
+  #      print(f"Your app is accessible at http://{local_ip}:5000")
+#
+ #   print("🌍 ENV:", os.getenv("FLASK_ENV"))
+  #  print("🔗 BASE_URL:", os.getenv("BASE_URL"))
+#
+ #   debug_mode = os.getenv("FLASK_ENV") == "development"
+  #  port = int(os.environ.get("PORT", 5000))
+   # socketio.run(app, host="0.0.0.0", port=port)
