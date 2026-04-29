@@ -7,3 +7,4 @@ APScheduler
 eventlet
 dateparser
 gunicorn
+psycopg2-binary
