@@ -4,7 +4,6 @@ Werkzeug
 python-dotenv
 pywebpush
 APScheduler
-eventlet
 dateparser
 gunicorn
 psycopg2-binary

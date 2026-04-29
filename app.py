@@ -1,6 +1,3 @@
-import eventlet
-eventlet.monkey_patch()
-
 from flask import Flask, render_template, request, redirect, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import psycopg2
@@ -40,7 +37,7 @@ app.config.update(
 )
 
 socketio = SocketIO(
-    app,
+    app, async_mode="threading"
     cors_allowed_origins="*",
     manage_session=True
 )
