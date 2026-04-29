@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
+import psycopg2
 from ai_parser import parse_tasks
 from datetime import datetime, timedelta
 from collections import Counter
@@ -54,7 +54,7 @@ VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY")
 # DATABASE HELPERS
 # ----------------------------
 def get_db():
-    return sqlite3.connect(DB_NAME, timeout=10, check_same_thread=False)
+    return psycopg2.connect(os.getenv("DATABASE_URL"))
 
 def init_db():
     conn = get_db()
@@ -67,7 +67,7 @@ def init_db():
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             username TEXT UNIQUE,
             email TEXT UNIQUE,
             password TEXT
@@ -76,7 +76,7 @@ def init_db():
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS tasks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             task TEXT,
             status TEXT,
             priority TEXT,
@@ -90,7 +90,7 @@ def init_db():
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS subscriptions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             endpoint TEXT UNIQUE,
             data TEXT,
             user_id INTEGER
@@ -125,7 +125,7 @@ def save_subscription(sub):
     user_id = session["user_id"]
 
     cursor.execute(
-        "INSERT OR IGNORE INTO subscriptions (endpoint, data, user_id) VALUES (?, ?, ?)",
+        "INSERT OR IGNORE INTO subscriptions (endpoint, data, user_id) VALUES (%s, %s, %s)",
         (endpoint, json.dumps(sub), user_id)
     )
 
@@ -165,7 +165,7 @@ def get_tasks(user_id):
     cursor.execute("""
         SELECT id, task, status, priority, deadline, created_at
         FROM tasks
-        WHERE user_id=?
+        WHERE user_id=%s
         ORDER BY CASE priority
             WHEN 'High' THEN 1
             WHEN 'Medium' THEN 2
@@ -292,7 +292,7 @@ def send_push(title, user_id):
         except Exception as e:
             print("Push error:", e)
             if "410" in str(e) or "gone" in str(e).lower():
-                cursor.execute("DELETE FROM subscriptions WHERE data=?", (row[0],))
+                cursor.execute("DELETE FROM subscriptions WHERE data=%s", (row[0],))
 
     conn.commit()
     conn.close()
@@ -332,8 +332,13 @@ def register():
         try:
             conn = get_db()
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO users (username,email,password) VALUES (?,?,?)",
-                           (username, email, password))
+            cursor.execute(
+                """
+                INSERT INTO users (username, email, password)
+                VALUES (%s, %s, %s)
+                """,
+                (username, email, password)
+            )
             conn.commit()
             conn.close()
             flash("Account created! Please login.", "success")
@@ -349,7 +354,7 @@ def login():
         password = request.form.get("password")
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, username, password FROM users WHERE username=? OR email=?",
+        cursor.execute("SELECT id, username, password FROM users WHERE username=%s OR email=%s",
                        (login_input, login_input))
         user = cursor.fetchone()
         conn.close()
@@ -387,7 +392,7 @@ def forgot_password():
 
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, username FROM users WHERE email=?", (email,))
+        cursor.execute("SELECT id, username FROM users WHERE email=%s", (email,))
         user = cursor.fetchone()
         username = user[1] if user else "there"
         conn.close()
@@ -400,7 +405,7 @@ def forgot_password():
             conn = get_db()
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO reset_tokens (token,user_id,expires_at) VALUES (?,?,?)",
+                "INSERT INTO reset_tokens (token,user_id,expires_at) VALUES (%s, %s,%s)",
                 (hashed_token, user[0], expires_at)
             )
             conn.commit()
@@ -580,7 +585,7 @@ def reset_password():
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT user_id, expires_at FROM reset_tokens WHERE token=?",
+        "SELECT user_id, expires_at FROM reset_tokens WHERE token=%s",
         (hashed_token,)
     )
     row = cursor.fetchone()
@@ -597,7 +602,7 @@ def reset_password():
         expiry_time = datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S")
 
     if expiry_time < datetime.now():
-        cursor.execute("DELETE FROM reset_tokens WHERE token=?", (hashed_token,))
+        cursor.execute("DELETE FROM reset_tokens WHERE token=%s", (hashed_token,))
         conn.commit()
         conn.close()
         flash("Token expired. Please request a new reset link.", "danger")
@@ -608,13 +613,13 @@ def reset_password():
         new_password = generate_password_hash(request.form.get("password"))
 
         cursor.execute(
-            "UPDATE users SET password=? WHERE id=?",
+            "UPDATE users SET password=%s WHERE id=%s",
             (new_password, row[0])
         )
 
         # 🔥 one-time use token (important fix)
         cursor.execute(
-            "DELETE FROM reset_tokens WHERE token=?",
+            "DELETE FROM reset_tokens WHERE token=%s",
             (hashed_token,)
         )
 
@@ -637,7 +642,7 @@ def index():
     user_id = session["user_id"]
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT username FROM users WHERE id=?", (user_id,))
+    cursor.execute("SELECT username FROM users WHERE id=%s", (user_id,))
     user = cursor.fetchone()
     conn.close()
     if not user:
@@ -675,7 +680,7 @@ def ai_add():
 
         cursor.execute("""
             INSERT INTO tasks (task,status,priority,deadline,notified,user_id)
-            VALUES (?,?,?,?,?,?)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """, (
             t["task"],
             "Pending",
@@ -722,7 +727,7 @@ def complete(id):
     cursor.execute("""
         UPDATE tasks 
         SET status='Completed', notified=0 
-        WHERE id=? AND user_id=?
+        WHERE id=%s AND user_id=%s
     """, (id, session["user_id"]))
     conn.commit()
     conn.close()
@@ -734,7 +739,7 @@ def complete(id):
 def delete(id):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM tasks WHERE id=? AND user_id=?", (id, session["user_id"]))
+    cursor.execute("DELETE FROM tasks WHERE id=%s AND user_id=%s", (id, session["user_id"]))
     conn.commit()
     conn.close()
     socketio.emit("task_deleted", {"id": id}, room=str(session["user_id"]))
@@ -757,8 +762,8 @@ def edit(id):
     try:
         cursor.execute("""
             UPDATE tasks
-            SET task=?, priority=?, deadline=?, status='Pending'
-            WHERE id=? AND user_id=?
+            SET task=%s, priority=%s, deadline=%s, status='Pending'
+            WHERE id=%s AND user_id=%s
         """, (task_text, priority, deadline, id, user_id))
     except sqlite3.OperationalError as e:
         print("DB lock (edit):", e)
@@ -855,7 +860,7 @@ def check_due_tasks():
             # Mark task as notified
             # ----------------------------
             try:
-                cursor.execute("UPDATE tasks SET notified=1 WHERE id=?", (task_id,))
+                cursor.execute("UPDATE tasks SET notified=1 WHERE id=%s", (task_id,))
             except sqlite3.OperationalError as e:
                 print("DB lock (scheduler):", e)
 
