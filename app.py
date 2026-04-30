@@ -37,7 +37,8 @@ app.config.update(
 )
 
 socketio = SocketIO(
-    app, async_mode="threading"
+    app,
+    async_mode="threading",
     cors_allowed_origins="*",
     manage_session=True
 )
@@ -53,30 +54,58 @@ VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY")
 # ----------------------------
 # DATABASE HELPERS
 # ----------------------------
+import sqlite3
+
+DB_MODE_PRINTED = False
+
 def get_db():
-    return psycopg2.connect(os.getenv("DATABASE_URL"))
+    global DB_MODE_PRINTED
+
+    db_url = os.getenv("DATABASE_URL")
+
+    if db_url:
+        if not DB_MODE_PRINTED:
+            print("🟣 Using PostgreSQL (production mode)")
+            DB_MODE_PRINTED = True
+        return psycopg2.connect(db_url)
+
+    else:
+        if not DB_MODE_PRINTED:
+            print("🟢 Using SQLite (local dev mode)")
+            DB_MODE_PRINTED = True
+        return sqlite3.connect("smarttask.db")
 
 def init_db():
     conn = get_db()
-    cursor = conn.cursor()
-    
-    # ----------------------------------------------------
-    # WAL mode enabled (fixes database locking issues)
-    # ----------------------------------------------------
-    cursor.execute("PRAGMA journal_mode=WAL;")
 
+    if conn is None:
+        print("⚠️ Skipping DB init (no connection)")
+        return
+
+    cursor = conn.cursor()
+
+    is_sqlite = "sqlite3" in str(type(conn))
+
+    # SQLite doesn't support this
+    if is_sqlite:
+        print("🟢 Initializing SQLite DB")
+    else:
+        print("🔵 Initializing PostgreSQL DB")
+
+    # USERS
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
+            id {} PRIMARY KEY,
             username TEXT UNIQUE,
             email TEXT UNIQUE,
             password TEXT
         )
-    """)
+    """.format("INTEGER" if is_sqlite else "SERIAL"))
 
+    # TASKS
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS tasks (
-            id SERIAL PRIMARY KEY,
+            id {} PRIMARY KEY,
             task TEXT,
             status TEXT,
             priority TEXT,
@@ -84,32 +113,31 @@ def init_db():
             due_time TEXT,
             notified INTEGER DEFAULT 0,
             user_id INTEGER,
-            created_at DATE DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
+    """.format("INTEGER" if is_sqlite else "SERIAL"))
 
+    # SUBSCRIPTIONS
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS subscriptions (
-            id SERIAL PRIMARY KEY,
+            id {} PRIMARY KEY,
             endpoint TEXT UNIQUE,
             data TEXT,
             user_id INTEGER
         )
-    """)
-    
+    """.format("INTEGER" if is_sqlite else "SERIAL"))
+
+    # RESET TOKENS
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS reset_tokens (
             token TEXT PRIMARY KEY,
             user_id INTEGER NOT NULL,
-            expires_at TEXT NOT NULL,
-            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+            expires_at TEXT NOT NULL
         )
     """)
 
     conn.commit()
     conn.close()
-
-init_db()
 
 # ----------------------------
 # SUBSCRIPTIONS
@@ -818,6 +846,11 @@ def api_tasks():
 # ----------------------------
 def check_due_tasks():
     conn = get_db()
+
+    if conn is None:
+        print("⚠️ No DB connection. Skipping scheduled task check.")
+        return
+
     cursor = conn.cursor()
 
     # Only select pending tasks that haven't been notified
@@ -887,18 +920,24 @@ scheduler.start()
 # ----------------------------
 # RUN
 # ----------------------------
-#if __name__ == "__main__":
- #   init_db()
-  #  import socket
-   # hostname = socket.gethostname()
-    #local_ip = socket.gethostbyname(hostname)
-#
- #   if os.getenv("FLASK_ENV") == "development":
-  #      print(f"Your app is accessible at http://{local_ip}:5000")
-#
- #   print("🌍 ENV:", os.getenv("FLASK_ENV"))
-  #  print("🔗 BASE_URL:", os.getenv("BASE_URL"))
-#
- #   debug_mode = os.getenv("FLASK_ENV") == "development"
-  #  port = int(os.environ.get("PORT", 5000))
-   # socketio.run(app, host="0.0.0.0", port=port)
+if __name__ == "__main__":
+    import socket
+
+    # ✅ Only initialize DB if using SQLite AND file doesn't exist
+    if not os.getenv("DATABASE_URL") and not os.path.exists("smarttask.db"):
+        print("🟢 Initializing SQLite DB")
+        init_db()
+
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+
+    if os.getenv("FLASK_ENV") == "development":
+        print(f"Your app is accessible at http://{local_ip}:5000")
+
+    print("🌍 ENV:", os.getenv("FLASK_ENV"))
+    print("🔗 BASE_URL:", os.getenv("BASE_URL"))
+
+    debug_mode = os.getenv("FLASK_ENV") == "development"
+    port = int(os.environ.get("PORT", 5000))
+
+    socketio.run(app, host="0.0.0.0", port=port, debug=debug_mode)
