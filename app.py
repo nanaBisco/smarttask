@@ -923,10 +923,11 @@ scheduler.start()
 if __name__ == "__main__":
     import socket
 
-    # ✅ Only initialize DB if using SQLite AND file doesn't exist
-    if not os.getenv("DATABASE_URL") and not os.path.exists("smarttask.db"):
-        print("🟢 Initializing SQLite DB")
+    try:
         init_db()
+        print("✅ DB initialized (safe)")
+    except Exception as e:
+        print("⚠️ DB init skipped:", e)
 
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
