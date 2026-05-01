@@ -43,6 +43,15 @@ socketio = SocketIO(
     manage_session=True
 )
 
+# ----------------------------
+# INIT DB ON STARTUP (Render + Local)
+# ----------------------------
+try:
+    init_db()
+    print("✅ DB initialized (safe)")
+except Exception as e:
+    print("⚠️ DB init failed:", e)
+
 DB_NAME = "tasks.db"
 
 # ----------------------------
@@ -923,11 +932,6 @@ scheduler.start()
 if __name__ == "__main__":
     import socket
 
-    try:
-        init_db()
-        print("✅ DB initialized (safe)")
-    except Exception as e:
-        print("⚠️ DB init skipped:", e)
 
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
