@@ -43,14 +43,6 @@ socketio = SocketIO(
     manage_session=True
 )
 
-# ----------------------------
-# INIT DB ON STARTUP (Render + Local)
-# ----------------------------
-try:
-    init_db()
-    print("✅ DB initialized (safe)")
-except Exception as e:
-    print("⚠️ DB init failed:", e)
 
 DB_NAME = "tasks.db"
 
@@ -147,6 +139,15 @@ def init_db():
 
     conn.commit()
     conn.close()
+
+# ----------------------------
+# INIT DB ON STARTUP (Render + Local)
+# ----------------------------
+try:
+    init_db()
+    print("✅ DB initialized (safe)")
+except Exception as e:
+    print("⚠️ DB init failed:", e)
 
 # ----------------------------
 # SUBSCRIPTIONS
