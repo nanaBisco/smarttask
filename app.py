@@ -53,6 +53,20 @@ VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY")
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY")
 
 # ----------------------------
+# AUTH DECORATORS
+# ----------------------------
+from functools import wraps
+
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Please log in first.", "warning")
+            return redirect("/login")
+        return f(*args, **kwargs)
+    return wrapper
+
+# ----------------------------
 # DATABASE HELPERS
 # ----------------------------
 import sqlite3
@@ -177,18 +191,13 @@ from flask_socketio import join_room
 
 @socketio.on("connect")
 def handle_connect():
-    print("⚡ Socket connect attempt")
-
     user_id = session.get("user_id")
 
     if not user_id:
-        print("❌ No session user_id — socket not joined to room")
-        return
+        return False  # silently reject connection
 
-    user_room = str(user_id)
-    join_room(user_room)
-
-    print(f"✅ User {user_room} connected and joined room")
+    join_room(str(user_id))
+    print(f"✅ User {user_id} connected to socket")
 
 @socketio.on("disconnect")
 def handle_disconnect():
@@ -363,13 +372,17 @@ def is_logged_in():
 # ----------------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    conn = None
+
     if request.method == "POST":
         username = request.form["username"]
         email = request.form["email"]
         password = generate_password_hash(request.form["password"])
+
         try:
             conn = get_db()
             cursor = conn.cursor()
+
             cursor.execute(
                 """
                 INSERT INTO users (username, email, password)
@@ -377,32 +390,64 @@ def register():
                 """,
                 (username, email, password)
             )
+
             conn.commit()
-            conn.close()
+
             flash("Account created! Please login.", "success")
             return redirect("/login")
-        except sqlite3.IntegrityError:
-            flash("Username or Email already exists!", "danger")
+
+        except Exception as e:
+            if conn:
+                conn.rollback()
+
+            if "duplicate key" in str(e):
+                flash("Username or Email already exists!", "danger")
+            else:
+                print("❌ Register error:", e)
+                flash("Something went wrong. Try again.", "danger")
+
+        finally:
+            if conn:
+                conn.close()
+
     return render_template("register.html")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    conn = None
+
     if request.method == "POST":
         login_input = request.form.get("username")
         password = request.form.get("password")
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, username, password FROM users WHERE username=%s OR email=%s",
-                       (login_input, login_input))
-        user = cursor.fetchone()
-        conn.close()
-        if user and check_password_hash(user[2], password):
-            session["user_id"] = user[0]
-            session["username"] = user[1]
-            flash(f"Welcome back, {user[1]}!", "success")
-            return redirect("/")
-        else:
-            flash("Invalid credentials!", "danger")
+
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "SELECT id, username, password FROM users WHERE username=%s OR email=%s",
+                (login_input, login_input)
+            )
+
+            user = cursor.fetchone()
+
+            if user and check_password_hash(user[2], password):
+                session["user_id"] = user[0]
+                session["username"] = user[1]
+
+                flash(f"Welcome back, {user[1]}!", "success")
+                return redirect("/")
+            else:
+                flash("Invalid credentials!", "danger")
+
+        except Exception as e:
+            print("❌ Login error:", e)
+            flash("Login failed. Try again.", "danger")
+
+        finally:
+            if conn:
+                conn.close()
+
     return render_template("login.html")
 
 @app.route("/logout")
@@ -850,6 +895,12 @@ def api_tasks():
         "weekly": weekly,
         "reminders": reminders
     })
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    print("❌ Global Error:", e)
+    flash("Something went wrong. Please try again.", "danger")
+    return redirect("/")
 
 # ----------------------------
 # SCHEDULER
