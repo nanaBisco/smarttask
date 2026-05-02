@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, render_template, request, redirect, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import psycopg2
@@ -38,7 +41,7 @@ app.config.update(
 
 socketio = SocketIO(
     app,
-    async_mode="threading",
+    async_mode="eventlet",
     cors_allowed_origins="*",
     manage_session=True
 )
@@ -634,7 +637,10 @@ SmartTask • Productivity Simplified
                     if not email_pass:
                         raise ValueError("EMAIL_PASS is not set.")
 
-                    smtp.login("smarttask570@gmail.com", email_pass)
+                    smtp.login(
+                        os.getenv("EMAIL_USER"),
+                        os.getenv("EMAIL_PASS")
+                    )
                     print("✅ Logged into SMTP")
 
                     smtp.send_message(msg)
