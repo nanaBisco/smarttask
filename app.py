@@ -1,5 +1,5 @@
 import eventlet
-eventlet.monkey_patch(socket=True, dns=True, time=True)
+eventlet.monkey_patch()
 
 from flask import Flask, render_template, request, redirect, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
