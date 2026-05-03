@@ -8,3 +8,4 @@ dateparser
 gunicorn
 psycopg2-binary
 eventlet
+resend
