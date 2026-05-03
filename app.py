@@ -10,7 +10,7 @@ from collections import Counter
 import uuid
 import smtplib
 from email.message import EmailMessage
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.gevent import GeventScheduler
 from flask_socketio import SocketIO, emit, join_room
 import json
 from pywebpush import webpush
@@ -974,7 +974,11 @@ def check_due_tasks():
     conn.commit()
     conn.close()
 
-scheduler = BackgroundScheduler()
+# ----------------------------
+# SCHEDULER INIT (Render-safe)
+# ----------------------------
+scheduler = GeventScheduler()
+
 scheduler.add_job(
     check_due_tasks,
     'interval',
@@ -982,7 +986,9 @@ scheduler.add_job(
     max_instances=1,
     coalesce=True
 )
-scheduler.start()
+
+if not scheduler.running:
+    scheduler.start()
 
 # ----------------------------
 # RUN
