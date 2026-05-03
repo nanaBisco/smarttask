@@ -629,29 +629,29 @@ SmartTask • Productivity Simplified
             try:
                 print("📧 Attempting to send email...")
 
-                email_user = os.getenv("EMAIL_USER")
-                email_pass = os.getenv("EMAIL_PASS")
+                import resend
 
-                print("🔑 EMAIL_USER:", email_user)
-                print("🔑 EMAIL_PASS loaded:", bool(email_pass))
+                resend.api_key = os.getenv("RESEND_API_KEY")
 
-                if not email_user or not email_pass:
-                    raise ValueError("Email credentials missing")
+                if not resend.api_key:
+                    raise ValueError("RESEND_API_KEY missing")
 
                 def send_email():
                     try:
-                        with smtplib.SMTP('smtp.gmail.com', 587, timeout=20) as smtp:
-                            smtp.ehlo()
-                            smtp.starttls()
-                            smtp.ehlo()
-                            smtp.login(email_user, email_pass)
-                            smtp.send_message(msg)
-                            print("✅ Email sent successfully")
-                    except Exception:
+                        resend.Emails.send({
+                            "from": "SmartTask <onboarding@resend.dev>",
+                            "to": [email],
+                            "subject": "SmartTask Password Reset",
+                            "html": msg.get_payload()[1].get_payload()
+                        })
+                        print("✅ Email sent via Resend")
+
+                    except Exception as e:
                         import traceback
-                        print("🔥 EMAIL ERROR (async):")
+                        print("🔥 RESEND ERROR:")
                         traceback.print_exc()
 
+                # run in background (non-blocking)
                 eventlet.spawn(send_email)
 
                 flash("Reset link sent to your email.", "info")
