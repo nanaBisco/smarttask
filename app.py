@@ -1,5 +1,5 @@
 import eventlet
-eventlet.monkey_patch()
+eventlet.monkey_patch(socket=True, dns=True, time=True)
 
 from flask import Flask, render_template, request, redirect, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -638,12 +638,21 @@ SmartTask • Productivity Simplified
                 if not email_user or not email_pass:
                     raise ValueError("Email credentials missing")
 
-                with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-                    smtp.login(email_user, email_pass)
-                    print("✅ Logged into SMTP")
+                def send_email():
+                    try:
+                        with smtplib.SMTP('smtp.gmail.com', 587, timeout=20) as smtp:
+                            smtp.ehlo()
+                            smtp.starttls()
+                            smtp.ehlo()
+                            smtp.login(email_user, email_pass)
+                            smtp.send_message(msg)
+                            print("✅ Email sent successfully")
+                    except Exception:
+                        import traceback
+                        print("🔥 EMAIL ERROR (async):")
+                        traceback.print_exc()
 
-                    smtp.send_message(msg)
-                    print("✅ Email sent successfully")
+                eventlet.spawn(send_email)
 
                 flash("Reset link sent to your email.", "info")
 
