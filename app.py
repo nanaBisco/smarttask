@@ -499,7 +499,7 @@ def forgot_password():
 
             msg = EmailMessage()
             msg['Subject'] = "SmartTask Password Reset"
-            msg['From'] = "smarttask570@gmail.com"
+            msg['From'] = os.getenv("EMAIL_USER")
             msg['To'] = email
 
             BASE_URL = os.getenv("BASE_URL", "http://localhost:5000")
@@ -629,18 +629,17 @@ SmartTask • Productivity Simplified
             try:
                 print("📧 Attempting to send email...")
 
+                email_user = os.getenv("EMAIL_USER")
+                email_pass = os.getenv("EMAIL_PASS")
+
+                print("🔑 EMAIL_USER:", email_user)
+                print("🔑 EMAIL_PASS loaded:", bool(email_pass))
+
+                if not email_user or not email_pass:
+                    raise ValueError("Email credentials missing")
+
                 with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-                    email_pass = os.getenv("EMAIL_PASS")
-
-                    print("🔑 EMAIL_PASS loaded:", bool(email_pass))
-
-                    if not email_pass:
-                        raise ValueError("EMAIL_PASS is not set.")
-
-                    smtp.login(
-                        os.getenv("EMAIL_USER"),
-                        os.getenv("EMAIL_PASS")
-                    )
+                    smtp.login(email_user, email_pass)
                     print("✅ Logged into SMTP")
 
                     smtp.send_message(msg)
