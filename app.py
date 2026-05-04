@@ -29,6 +29,9 @@ else:
 # APP & SOCKETIO INIT
 # ----------------------------
 app = Flask(__name__)
+
+ENV = os.getenv("ENV", "development")  # default = dev
+
 # Get SECRET_KEY from env, fallback to dev-secret if not set
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key")
 
@@ -629,32 +632,31 @@ SmartTask • Productivity Simplified
             try:
                 print("📧 Attempting to send email...")
 
-                import resend
+                if ENV == "production":
+                    # PROD → disabled cleanly
+                    flash("Password reset is temporarily unavailable. Please contact support.", "warning")
 
-                resend.api_key = os.getenv("RESEND_API_KEY")
+                else:
+                    # DEV MODE
 
-                if not resend.api_key:
-                    raise ValueError("RESEND_API_KEY missing")
+                    print("🔗 RESET LINK:", reset_link)
+                    flash(f"DEV RESET LINK: {reset_link}", "info")
 
-                def send_email():
-                    try:
-                        resend.Emails.send({
-                            "from": "SmartTask <onboarding@resend.dev>",
-                            "to": [email],
-                            "subject": "SmartTask Password Reset",
-                            "html": msg.get_payload()[1].get_payload()
-                        })
-                        print("✅ Email sent via Resend")
+                    import resend
+                    resend.api_key = os.getenv("RESEND_API_KEY")
 
-                    except Exception as e:
-                        import traceback
-                        print("🔥 RESEND ERROR:")
-                        traceback.print_exc()
+                    if not resend.api_key:
+                        raise ValueError("RESEND_API_KEY missing")
 
-                # run in background (non-blocking)
-                eventlet.spawn(send_email)
+                    resend.Emails.send({
+                        "from": "SmartTask <onboarding@resend.dev>",
+                        "to": ["henrynanaasansah@gmail.com"],  # your email only
+                        "subject": "SmartTask Password Reset",
+                        "html": msg.get_payload()[1].get_payload()
+                    })
 
-                flash("Reset link sent to your email.", "info")
+                    print("✅ Email sent (DEV MODE)")
+                    flash("Reset link generated (DEV MODE). Check above.", "info")
 
             except Exception as e:
                 import traceback
