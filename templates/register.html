@@ -87,6 +87,17 @@ body{
     position:relative;
 }
 
+@media (max-width: 480px) {
+    .register-wrapper{
+        width:100vw; /* true full screen width */
+        max-width:100vw;
+        margin:0;
+        padding:20px;
+        border-radius:10px;
+        box-sizing:border-box;
+    }
+}
+
 /* GLASSMORPHISM ONLY IN DARK MODE */
 body.dark-mode .register-wrapper{
     backdrop-filter: blur(18px);

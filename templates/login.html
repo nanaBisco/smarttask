@@ -35,9 +35,21 @@ margin:0;
     animation:fadeIn 0.5s ease;
 }
 
+@media (max-width: 480px) {
+    .login-wrapper{
+        width:100vw; /* true full screen width */
+        max-width:100vw;
+        margin:0;
+        padding:20px;
+        border-radius:10px;
+        box-sizing:border-box;
+    }
+}
+
 @media (max-width: 320px) {
     .login-wrapper {
-        padding:20px;
+        padding:18px;
+        margin:0 10px; /* tighter for very small screens */
     }
 }
 
@@ -390,6 +402,8 @@ input:checked + .slider:before {
         font-size: 16px;
     }
 }
+
+
 </style>
 
 <div id="comingSoonFlash" style="
