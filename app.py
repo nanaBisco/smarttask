@@ -245,18 +245,38 @@ def generate_insight(tasks):
             except Exception as e:
                 print("Error:", e)
 
-    suggestion = "Stay consistent."
-    if day_counter:
-        best_day = day_counter.most_common(1)[0][0]
+    suggestion = "Keep going."
 
-        if high > 0:
-            suggestion = "⚠️ You still have high priority tasks pending. Focus on them first."
-        elif pending > 5:
-            suggestion = "📌 You have many pending tasks. Try clearing small ones quickly."
-        elif completed == total and total > 0:
-            suggestion = "🎉 Perfect! Everything completed."
-        else:
-            suggestion = f"📈 You are most productive on {best_day}s. Plan important tasks then."
+    if total == 0:
+        suggestion = "🆕 Start by adding your first task."
+
+    elif completed == total:
+        suggestion = "🎉 Perfect! Everything completed."
+
+    elif high > 0:
+        suggestion = "⚠️ Focus first: you still have high priority tasks pending."
+
+    elif pending == 1:
+        suggestion = "🔥 Just one task left—finish strong."
+    
+    elif pending > 5:
+        suggestion = "📌 You have many pending tasks. Try clearing small ones quickly."
+
+    elif score < 30:
+        suggestion = "🔧 You're getting started—small wins matter."
+    
+    elif score >= 70:
+        suggestion = "💪 Strong productivity. Keep the momentum going."
+
+    elif score >= 40:
+        suggestion = "📊 You're making progress. Stay consistent."
+
+    elif day_counter:
+        best_day = day_counter.most_common(1)[0][0]
+        suggestion = f"📈 You are most productive on {best_day}s. Plan important tasks then."
+
+    else:
+        suggestion = "🚀 Keep going—you’re building momentum."
 
     return {
         "total": total,
