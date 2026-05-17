@@ -7,5 +7,5 @@ APScheduler
 dateparser
 gunicorn
 psycopg2-binary
-eventlet
+eventlet==0.36.1
 resend
