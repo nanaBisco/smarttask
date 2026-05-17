@@ -184,6 +184,43 @@ form input[name="task"]::placeholder {
     background: rgba(0,0,0,0.1);
 }
 
+/* MIC BUTTON */
+.mic-btn {
+    position: absolute;
+    right: 50px; /* sits beside calendar */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.05);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    color: inherit;
+    transition: 0.2s ease;
+}
+
+.mic-btn:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+/* listening animation */
+.mic-btn.listening {
+    background: #ef4444;
+    color: white;
+    animation: pulseMic 1s infinite;
+}
+
+@keyframes pulseMic {
+    0% { transform: translateY(-50%) scale(1); }
+    50% { transform: translateY(-50%) scale(1.08); }
+    100% { transform: translateY(-50%) scale(1); }
+}
+
 /* POPUP */
 .datetime-popup {
     position: absolute;
@@ -338,7 +375,6 @@ form .add-btn {
 
 /* TASK */
 .task{
-    background:var(--card-color);
     padding:18px;
     margin-bottom:12px;
     border-radius:14px;
@@ -347,6 +383,40 @@ form .add-btn {
     justify-content:space-between;
     box-shadow:0 5px 15px rgba(0,0,0,0.06);
     position: relative;
+    transition: all 0.2s ease;
+}
+
+/* =========================
+   LIGHT MODE PASTEL TASK CARDS
+   ========================= */
+body:not(.dark-mode) .task:nth-child(6n+1){
+    background:#e8f5e9; /* soft green */
+}
+
+body:not(.dark-mode) .task:nth-child(6n+2){
+    background:#e3f2fd; /* soft blue */
+}
+
+body:not(.dark-mode) .task:nth-child(6n+3){
+    background:#fff8e1; /* soft yellow */
+}
+
+body:not(.dark-mode) .task:nth-child(6n+4){
+    background:#fce4ec; /* soft pink */
+}
+
+body:not(.dark-mode) .task:nth-child(6n+5){
+    background:#ede7f6; /* soft purple */
+}
+
+body:not(.dark-mode) .task:nth-child(6n+6){
+    background:#e0f7fa; /* soft cyan */
+}
+
+/* subtle lift effect only in light mode */
+body:not(.dark-mode) .task:hover{
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
 }
 
 /* Task content */
@@ -747,6 +817,13 @@ body.dark-mode .theme-btn {
         right: 6px;
     }
 
+    .mic-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    right: 52px;
+    }
+
     /* Popup full width feel */
     .datetime-popup {
         width: 65%;
@@ -1045,6 +1122,10 @@ body.dark-mode .theme-btn {
                 📅
             </button>
 
+            <button type="button" class="mic-btn" id="micBtn">
+                🎤
+            </button>
+
             <div class="datetime-popup" id="datetimePopup">
                 <input type="date" name="deadline">
             </div>
@@ -1255,6 +1336,390 @@ document.querySelectorAll("#datetimePopup input").forEach(input=>{
         document.getElementById("datetimePopup").classList.remove("active");
     });
 });
+
+// ============================
+// VOICE INPUT
+// ============================
+
+const micBtn = document.getElementById("micBtn");
+const taskInput = document.querySelector('input[name="task"]');
+
+let recognition;
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+
+    const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    recognition = new SpeechRecognition();
+
+    recognition.continuous = false;
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+
+    micBtn.addEventListener("click", () => {
+
+        recognition.start();
+
+        micBtn.classList.add("listening");
+
+        showToast("🎤 Listening...", "info");
+    });
+
+    recognition.onresult = (event) => {
+
+        const transcript = event.results[0][0].transcript;
+
+        const spokenText = transcript.toLowerCase();
+
+        console.log("VOICE:", transcript);
+
+        // ============================
+        // VOICE ACTION COMMANDS
+        // ============================
+
+        // COMPLETE TASK
+        if (
+            spokenText.startsWith("mark ") &&
+            spokenText.includes(" complete")
+        ) {
+
+            const taskName = spokenText
+                .replace("mark ", "")
+                .replace(" complete", "")
+                .trim();
+
+            executeVoiceTaskAction(taskName, "complete");
+
+            return;
+        }
+
+        if (spokenText.startsWith("complete ")) {
+
+            const taskName = spokenText
+                .replace("complete ", "")
+                .trim();
+
+            executeVoiceTaskAction(taskName, "complete");
+
+            return;
+        }
+
+        // ============================
+        // EDIT / RENAME TASK
+        // ============================
+
+        if (
+            spokenText.startsWith("rename ") &&
+            spokenText.includes(" to ")
+        ) {
+
+            const parts = spokenText
+                .replace("rename ", "")
+                .split(" to ");
+
+            const oldTaskName = parts[0]?.trim();
+            const newTaskName = parts[1]?.trim();
+
+            executeVoiceEdit(oldTaskName, newTaskName);
+
+            return;
+        }
+
+        if (
+            spokenText.startsWith("change ") &&
+            spokenText.includes(" to ")
+        ) {
+
+            const parts = spokenText
+                .replace("change ", "")
+                .split(" to ");
+
+            const oldTaskName = parts[0]?.trim();
+            const newTaskName = parts[1]?.trim();
+
+            executeVoiceEdit(oldTaskName, newTaskName);
+
+            return;
+        }
+        
+        // DELETE TASK
+        if (spokenText.startsWith("delete ")) {
+
+            const taskName = spokenText
+                .replace("delete ", "")
+                .trim();
+
+            executeVoiceTaskAction(taskName, "delete");
+
+            return;
+        }
+
+        if (spokenText.startsWith("remove ")) {
+
+            const taskName = spokenText
+                .replace("remove ", "")
+                .trim();
+
+            executeVoiceTaskAction(taskName, "delete");
+
+            return;
+        }
+
+        // ----------------------------
+        // SMART TASK PARSING
+        // ----------------------------
+
+        const lower = transcript.toLowerCase();
+
+        let cleanedTask = transcript;
+
+        // PRIORITY DETECTION
+        let detectedPriority = "";
+
+        if (lower.includes("high priority")) {
+            detectedPriority = "High";
+            cleanedTask = cleanedTask.replace(/high priority/i, "");
+        }
+        else if (lower.includes("medium priority")) {
+            detectedPriority = "Medium";
+            cleanedTask = cleanedTask.replace(/medium priority/i, "");
+        }
+        else if (lower.includes("low priority")) {
+            detectedPriority = "Low";
+            cleanedTask = cleanedTask.replace(/low priority/i, "");
+        }
+
+        // DATE DETECTION
+        const deadlineInput = document.querySelector('input[name="deadline"]');
+
+        const today = new Date();
+
+        if (lower.includes("tomorrow")) {
+
+            const tomorrow = new Date();
+            tomorrow.setDate(today.getDate() + 1);
+
+            deadlineInput.value = tomorrow.toISOString().split("T")[0];
+
+            cleanedTask = cleanedTask.replace(/tomorrow/i, "");
+        }
+
+        else if (lower.includes("today")) {
+
+            deadlineInput.value = today.toISOString().split("T")[0];
+
+            cleanedTask = cleanedTask.replace(/today/i, "");
+        }
+
+        // AUTO SELECT PRIORITY
+        if (detectedPriority) {
+
+            document.querySelector('select[name="priority"]').value =
+                detectedPriority;
+        }
+
+        // CLEAN FINAL TASK
+        cleanedTask = cleanedTask.trim();
+
+        taskInput.value = cleanedTask;
+
+        showToast("✅ Voice captured", "success");
+    };
+
+    recognition.onerror = (event) => {
+
+        console.error("Speech error:", event.error);
+
+        showToast("❌ Voice recognition failed", "danger");
+    };
+
+    recognition.onend = () => {
+
+        micBtn.classList.remove("listening");
+    };
+
+} else {
+
+    console.warn("Speech recognition not supported");
+
+    micBtn.style.display = "none";
+}
+
+// ============================
+// EXECUTE VOICE ACTIONS
+// ============================
+
+// ============================
+// VOICE EDIT TASK
+// ============================
+
+function executeVoiceEdit(oldTaskName, newTaskName) {
+
+    const tasks = document.querySelectorAll(".task");
+
+    let matchedTask = null;
+
+    tasks.forEach(task => {
+
+        const title =
+            task.querySelector(".task-title")
+            ?.innerText
+            ?.toLowerCase()
+            ?.trim();
+
+        if (!title) return;
+
+        if (
+            title.includes(oldTaskName) ||
+            oldTaskName.includes(title)
+        ) {
+            matchedTask = task;
+        }
+    });
+
+    if (!matchedTask) {
+
+        showToast(`❌ Task not found: ${oldTaskName}`, "danger");
+
+        return;
+    }
+
+    const taskId = matchedTask.dataset.id;
+
+    // Preserve existing values
+    const priority =
+        matchedTask.querySelector('[class*="priority-"]')
+        ?.innerText
+        ?.trim() || "Low";
+
+    const deadline =
+        matchedTask.querySelector('small:last-child')
+        ?.innerText
+        ?.replace("⏰ Due:", "")
+        ?.trim() || "";
+
+    const payload = new FormData();
+
+    payload.append("task", newTaskName);
+    payload.append("priority", priority);
+    payload.append("deadline",
+        deadline === "No date" ? "" : deadline
+    );
+
+    fetch(`/edit/${taskId}`, {
+        method: "POST",
+        body: payload,
+        credentials: "same-origin"
+    })
+    .then(() => {
+
+        showToast("✏️ Task updated by voice", "success");
+
+        updateDashboard();
+    })
+    .catch(err => {
+
+        console.error(err);
+
+        showToast("❌ Voice edit failed", "danger");
+    });
+}
+
+function executeVoiceTaskAction(taskName, action) {
+
+    const tasks = document.querySelectorAll(".task");
+
+    let matchedTask = null;
+
+    tasks.forEach(task => {
+
+        const title =
+            task.querySelector(".task-title")
+            ?.innerText
+            ?.toLowerCase()
+            ?.trim();
+
+        if (!title) return;
+
+        // partial matching support
+        if (
+            title.includes(taskName) ||
+            taskName.includes(title)
+        ) {
+            matchedTask = task;
+        }
+    });
+
+    if (!matchedTask) {
+
+        showToast(`❌ Task not found: ${taskName}`, "danger");
+
+        return;
+    }
+
+    const taskId = matchedTask.dataset.id;
+
+    // COMPLETE TASK
+    if (action === "complete") {
+
+        fetch(`/complete/${taskId}`, {
+            method: "GET",
+            credentials: "same-origin"
+        })
+        .then(() => {
+
+            confetti({
+                particleCount: 100,
+                spread: 70
+            });
+
+            showToast("✅ Task completed by voice", "success");
+
+            updateDashboard();
+        });
+
+        return;
+    }
+
+    // DELETE TASK
+if (action === "delete") {
+
+    // remove visually first
+    matchedTask.remove();
+
+    lastDeletedTask = taskId;
+
+    showUndoToast("🗑️ Task deleted by voice", () => {
+
+        clearTimeout(deleteTimeout);
+
+        updateDashboard();
+
+        lastDeletedTask = null;
+    });
+
+    deleteTimeout = setTimeout(() => {
+
+        if (lastDeletedTask) {
+
+            fetch(`/delete/${taskId}`, {
+                method: "GET",
+                credentials: "same-origin"
+            })
+            .then(() => {
+
+                updateDashboard();
+
+                lastDeletedTask = null;
+            });
+        }
+
+    }, 5000);
+
+    return;
+}
+}
 
 window.onload = function(){
     const savedTheme = localStorage.getItem("theme");
