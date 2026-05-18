@@ -1079,11 +1079,11 @@ body.dark-mode .theme-btn {
 
 .voice-btn {
     position: absolute;
-    right: 50px;
+    right: 52px;
     top: 50%;
     transform: translateY(-50%);
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     border: none;
     background: var(--primary);
@@ -1123,6 +1123,51 @@ body.dark-mode .theme-btn {
     }
 }
 
+/* =========================
+   FLOATING HELP BUTTON
+   ========================= */
+
+#helpTourBtn {
+    position: fixed;
+    top: 20px;
+    right: 90px; /* sits above logout/theme area */
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary);
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+
+    transition: all 0.25s ease;
+}
+
+#helpTourBtn:hover {
+    transform: scale(1.08);
+}
+
+/* MOBILE POSITION */
+@media (max-width: 600px) {
+
+    #helpTourBtn {
+        top: auto;
+        bottom: 20px;
+        right: 20px;
+        width: 52px;
+        height: 52px;
+        font-size: 22px;
+    }
+}
+
 </style>
 
 <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
@@ -1139,8 +1184,8 @@ body.dark-mode .theme-btn {
     <div style="display:flex; justify-content:space-between; align-items:center;">
         <h1>SmartTask</h1>
         <div class="header-actions">
-            <button class="btn add-btn" onclick="startSmartTaskTour()">
-                ❔ Help
+            <button id="helpTourBtn" onclick="startSmartTaskTour()">
+                ❔
             </button>
     <a href="#" class="btn delete-btn" id="logoutBtn">Logout</a>
 
@@ -1421,29 +1466,30 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
     
     micBtn.addEventListener("click", () => {
-        recognition.start();
+        try {
+            recognition.start();
+        } catch(err) {
+            console.warn("Recognition already running");
+        }
 
         const btn = document.getElementById("micBtn");
         btn.classList.add("listening");
 
         showToast("Listening...", "info");
 
-        recognition.onresult = () => {
-            btn.classList.remove("listening");
-        };
-
-        recognition.onend = () => {
-            btn.classList.remove("listening");
-        };
     });
 
     recognition.onresult = (event) => {
 
-        const transcript = event.results[0][0].transcript;
+    micBtn.classList.remove("listening");
 
-        const spokenText = transcript.toLowerCase();
+    const transcript = event.results[0][0].transcript;
 
-        console.log("VOICE:", transcript);
+    const spokenText = transcript.toLowerCase();
+
+    console.log("VOICE:", transcript);
+
+    showToast("✅ Voice captured", "success");
 
         // ============================
         // VOICE ACTION COMMANDS
@@ -1595,7 +1641,10 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
         taskInput.value = cleanedTask;
 
-        showToast("✅ Voice captured", "success");
+    };
+
+    recognition.onend = () => {
+    micBtn.classList.remove("listening");
     };
 
     recognition.onerror = (event) => {
