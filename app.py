@@ -750,6 +750,37 @@ def reset_password():
 # ----------------------------
 # DASHBOARD
 # ----------------------------
+@app.route("/setup-onboarding")
+def setup_onboarding():
+
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+
+    try:
+        # Add new column
+        cur.execute("""
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS onboarded BOOLEAN DEFAULT FALSE;
+        """)
+
+        # Mark old users as already onboarded
+        cur.execute("""
+            UPDATE users
+            SET onboarded = TRUE;
+        """)
+
+        conn.commit()
+
+        return "✅ Onboarding column added successfully!"
+
+    except Exception as e:
+        conn.rollback()
+        return f"❌ Error: {e}"
+
+    finally:
+        cur.close()
+        conn.close()
+
 @app.route("/")
 def index():
     if not is_logged_in():
