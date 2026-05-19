@@ -1273,6 +1273,8 @@ body.dark-mode .theme-btn {
 <script>
 const socket = window.socket;
 
+const showTour = false;
+
 if (!socket) {
     console.error("❌ Socket not ready yet");
 } else {
@@ -1455,8 +1457,11 @@ document.querySelectorAll("#datetimePopup input").forEach(input=>{
 
 const micBtn = document.getElementById("micBtn");
 const taskInput = document.querySelector('input[name="task"]');
+const prioritySelect = document.querySelector('select[name="priority"]');
+const deadlineInput = document.querySelector('input[name="deadline"]');
 
 let recognition;
+let isListening = false;
 
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
@@ -1469,207 +1474,95 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     recognition.lang = 'en-US';
     recognition.interimResults = false;
 
-    
     micBtn.addEventListener("click", () => {
-    if (isListening) return;
 
-    try {
-        recognition.start();
-        isListening = true;
-    } catch(err) {
-        console.warn("Recognition already running");
-    }
+        if (isListening) return;
 
-    micBtn.classList.add("listening");
+        try {
+            recognition.start();
+            isListening = true;
 
-    showToast("Listening...", "info");
+            micBtn.classList.add("listening");
+
+            showToast("🎤 Listening...", "info");
+
+        } catch(err) {
+            console.warn("Recognition already running");
+        }
     });
 
     recognition.onresult = (event) => {
 
-    const transcript = event.results[0][0].transcript;
+        const transcript = event.results[0][0].transcript;
 
-    console.log("VOICE:", transcript);
+        console.log("VOICE:", transcript);
 
-    taskInput.value = transcript;
+        const spokenText = transcript.toLowerCase();
 
-    showToast("✅ Voice captured", "success");
-
-
-        // ============================
-        // VOICE ACTION COMMANDS
-        // ============================
-
-        // COMPLETE TASK
-        if (
-            spokenText.startsWith("mark ") &&
-            spokenText.includes(" complete")
-        ) {
-
-            const taskName = spokenText
-                .replace("mark ", "")
-                .replace(" complete", "")
-                .trim();
-
-            executeVoiceTaskAction(taskName, "complete");
-
-            return;
-        }
-
-        if (spokenText.startsWith("complete ")) {
-
-            const taskName = spokenText
-                .replace("complete ", "")
-                .trim();
-
-            executeVoiceTaskAction(taskName, "complete");
-
-            return;
-        }
-
-        // ============================
-        // EDIT / RENAME TASK
-        // ============================
-
-        if (
-            spokenText.startsWith("rename ") &&
-            spokenText.includes(" to ")
-        ) {
-
-            const parts = spokenText
-                .replace("rename ", "")
-                .split(" to ");
-
-            const oldTaskName = parts[0]?.trim();
-            const newTaskName = parts[1]?.trim();
-
-            executeVoiceEdit(oldTaskName, newTaskName);
-
-            return;
-        }
-
-        if (
-            spokenText.startsWith("change ") &&
-            spokenText.includes(" to ")
-        ) {
-
-            const parts = spokenText
-                .replace("change ", "")
-                .split(" to ");
-
-            const oldTaskName = parts[0]?.trim();
-            const newTaskName = parts[1]?.trim();
-
-            executeVoiceEdit(oldTaskName, newTaskName);
-
-            return;
-        }
-        
-        // DELETE TASK
-        if (spokenText.startsWith("delete ")) {
-
-            const taskName = spokenText
-                .replace("delete ", "")
-                .trim();
-
-            executeVoiceTaskAction(taskName, "delete");
-
-            return;
-        }
-
-        if (spokenText.startsWith("remove ")) {
-
-            const taskName = spokenText
-                .replace("remove ", "")
-                .trim();
-
-            executeVoiceTaskAction(taskName, "delete");
-
-            return;
-        }
-
-        // ----------------------------
-        // SMART TASK PARSING
-        // ----------------------------
-
-        const lower = transcript.toLowerCase();
-
-        let cleanedTask = transcript;
+        // Autofill task field
+        taskInput.value = transcript;
 
         // PRIORITY DETECTION
-        let detectedPriority = "";
+        if (spokenText.includes("high priority")) {
+            prioritySelect.value = "High";
+            taskInput.value = transcript.replace(/high priority/gi, "").trim();
+        }
 
-        if (lower.includes("high priority")) {
-            detectedPriority = "High";
-            cleanedTask = cleanedTask.replace(/high priority/i, "");
+        else if (spokenText.includes("medium priority")) {
+            prioritySelect.value = "Medium";
+            taskInput.value = transcript.replace(/medium priority/gi, "").trim();
         }
-        else if (lower.includes("medium priority")) {
-            detectedPriority = "Medium";
-            cleanedTask = cleanedTask.replace(/medium priority/i, "");
-        }
-        else if (lower.includes("low priority")) {
-            detectedPriority = "Low";
-            cleanedTask = cleanedTask.replace(/low priority/i, "");
+
+        else if (spokenText.includes("low priority")) {
+            prioritySelect.value = "Low";
+            taskInput.value = transcript.replace(/low priority/gi, "").trim();
         }
 
         // DATE DETECTION
-        const deadlineInput = document.querySelector('input[name="deadline"]');
+        if (spokenText.includes("today")) {
 
-        const today = new Date();
+            const today = new Date().toISOString().split("T")[0];
 
-        if (lower.includes("tomorrow")) {
+            deadlineInput.value = today;
+
+            taskInput.value = taskInput.value.replace(/today/gi, "").trim();
+        }
+
+        else if (spokenText.includes("tomorrow")) {
 
             const tomorrow = new Date();
-            tomorrow.setDate(today.getDate() + 1);
+            tomorrow.setDate(tomorrow.getDate() + 1);
 
-            deadlineInput.value = tomorrow.toISOString().split("T")[0];
+            deadlineInput.value =
+                tomorrow.toISOString().split("T")[0];
 
-            cleanedTask = cleanedTask.replace(/tomorrow/i, "");
+            taskInput.value =
+                taskInput.value.replace(/tomorrow/gi, "").trim();
         }
 
-        else if (lower.includes("today")) {
-
-            deadlineInput.value = today.toISOString().split("T")[0];
-
-            cleanedTask = cleanedTask.replace(/today/i, "");
-        }
-
-        // AUTO SELECT PRIORITY
-        if (detectedPriority) {
-
-            document.querySelector('select[name="priority"]').value =
-                detectedPriority;
-        }
-
-        // CLEAN FINAL TASK
-        cleanedTask = cleanedTask.trim();
-
-        taskInput.value = cleanedTask;
-
+        showToast("✅ Voice captured", "success");
     };
 
     recognition.onend = () => {
-    micBtn.classList.remove("listening");
-    isListening = false;
+        micBtn.classList.remove("listening");
+        isListening = false;
     };
 
     recognition.onerror = (event) => {
-
-        console.error("Speech error:", event.error);
-
-        showToast("❌ Voice recognition failed", "danger");
-    };
-
-    recognition.onend = () => {
+        console.error("Speech recognition error:", event.error);
 
         micBtn.classList.remove("listening");
+
+        isListening = false;
+
+        showToast("❌ Voice failed", "danger");
     };
 
 } else {
 
-    console.warn("Speech recognition not supported");
-
     micBtn.style.display = "none";
+
+    console.warn("Speech Recognition not supported");
 }
 
 // ============================
@@ -2366,18 +2259,13 @@ function startSmartTaskTour() {
 
     tour.drive();
 
-    tour.onDestroyed(() => {
-        localStorage.setItem("smarttaskTourDone", "true");
-    });
 }
 
 window.addEventListener("load", () => {
 
-    const alreadySeen = localStorage.getItem("smarttaskTourDone");
-
     setTimeout(() => {
 
-        if (!localStorage.getItem("smarttaskTourDone")) {
+        if (typeof showTour !== "undefined" && showTour) {
             startSmartTaskTour();
         }
 
@@ -2406,10 +2294,10 @@ if (location.hostname === "localhost") {
     console.log("Debug info...");
 }
 
-<button id="helpTourBtn" onclick="startSmartTaskTour()">
-                ❔
-</button>
-
 </script>
+
+<button id="helpTourBtn" onclick="startSmartTaskTour()">
+    ❔
+</button>
 
 {% endblock %}
