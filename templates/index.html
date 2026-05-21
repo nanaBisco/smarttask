@@ -1468,6 +1468,98 @@ const prioritySelect = document.querySelector('select[name="priority"]');
 const deadlineInput = document.querySelector('input[name="deadline"]');
 
 let recognition;
+
+// ============================
+// MULTILINGUAL INTENT DICTIONARY
+// ============================
+
+const intentMap = {
+
+    complete: [
+        "complete",
+        "finished",
+        "done",
+        "mark done",
+        "mark complete",
+
+        // Twi
+        "mewie",
+        "awie",
+        "ma wie",
+        "awie no",
+
+        // Pidgin
+        "finish am",
+        "don finish",
+        "don do am"
+    ],
+
+    delete: [
+        "delete",
+        "remove",
+        "cancel",
+        "erase",
+
+        // Pidgin
+        "commot",
+        "take am off",
+        "clear am",
+
+        // Twi
+        "meyi no",
+        "yi fi hɔ"
+    ],
+
+    edit: [
+        "edit",
+        "change",
+        "update",
+        "rename",
+
+        // Pidgin
+        "change am",
+        "adjust am"
+    ]
+};
+
+function detectIntent(text) {
+
+    text = text.toLowerCase();
+
+    for (const [intent, keywords] of Object.entries(intentMap)) {
+
+        for (const keyword of keywords) {
+
+            if (text.includes(keyword)) {
+                return intent;
+            }
+        }
+    }
+
+    return null;
+}
+
+function cleanTaskText(text) {
+
+    let cleaned = text.toLowerCase();
+
+    Object.values(intentMap)
+        .flat()
+        .forEach(keyword => {
+
+            cleaned =
+                cleaned.replace(keyword, "");
+        });
+
+    return cleaned.trim();
+}
+
+// ============================
+// VOICE MEMORY
+// ============================
+
+let lastVoiceTask = null;
+
 let isListening = false;
 
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -1506,45 +1598,107 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
         const spokenText = transcript.toLowerCase();
 
-        // Autofill task field
+        const intent =
+            detectIntent(spokenText);
+
+        const cleanedText =
+            cleanTaskText(spokenText);
+
+        console.log("Detected Intent:", intent);
+        console.log("Cleaned Task:", cleanedText);
+        
+        if (intent === "complete" && cleanedText) {
+
+            executeVoiceTaskAction(
+                cleanedText,
+                "complete"
+            );
+
+            return;
+        }
+
+        if (intent === "delete" && cleanedText) {
+
+            executeVoiceTaskAction(
+                cleanedText,
+                "delete"
+            );
+
+            return;
+        }
+
+        if (intent === "edit" && spokenText.includes(" to ")) {
+
+            const parts =
+                spokenText.split(" to ");
+
+            if (parts.length === 2) {
+
+                const oldTask =
+                    cleanTaskText(parts[0]);
+
+                const newTask =
+                    parts[1].trim();
+
+                executeVoiceEdit(
+                    oldTask,
+                    newTask
+                );
+
+                return;
+            }
+        }
+        
+            // Autofill task field
         taskInput.value = transcript;
 
         const spoken = transcript.toLowerCase();
+
+        
 
         // ============================
         // VOICE COMMAND ROUTER
         // ============================
 
-        // DELETE
-        if (spoken.startsWith("delete ")) {
-            const taskName = spoken.replace("delete", "").trim();
-            executeVoiceTaskAction(taskName, "delete");
-            return;
+        // ============================
+        // SMART AI INTENT DETECTION
+        // ============================
+
+        const deleteWords = [
+            "delete",
+            "remove",
+            "cancel",
+            "discard",
+            "erase",
+            "drop"
+        ];
+
+        const completeWords = [
+            "complete",
+            "finished",
+            "done",
+            "mark done",
+            "mark complete",
+            "completed"
+        ];
+
+        const editWords = [
+            "edit",
+            "change",
+            "rename",
+            "update",
+            "replace"
+        ];
+
+        function containsIntent(text, keywords) {
+            return keywords.some(word => text.includes(word));
         }
 
-        // COMPLETE
-        if (spoken.startsWith("complete ") || spoken.startsWith("finish ")) {
-            const taskName = spoken.replace(/complete|finish/, "").trim();
-            executeVoiceTaskAction(taskName, "complete");
-            return;
-        }
+        // ============================
+        // NATURAL VOICE ROUTER
+        // ============================
 
-        // EDIT
-        if (spoken.includes("change") || spoken.includes("edit")) {
-
-            const parts = spoken.split(" to ");
-
-            if (parts.length === 2) {
-                const oldTask = parts[0]
-                    .replace(/change|edit/, "")
-                    .trim();
-
-                const newTask = parts[1].trim();
-
-                executeVoiceEdit(oldTask, newTask);
-                return;
-            }
-        }
+        
 
         // PRIORITY DETECTION
         if (spokenText.includes("high priority")) {
@@ -1623,30 +1777,29 @@ function executeVoiceEdit(oldTaskName, newTaskName) {
 
     let matchedTask = null;
 
-    tasks.forEach(task => {
+    // ============================
+    // PRONOUN / MEMORY SUPPORT
+    // ============================
 
-        const title =
-            task.querySelector(".task-title")
-            ?.innerText
-            ?.toLowerCase()
-            ?.trim();
+    if (
+        oldTaskName === "it" ||
+        oldTaskName === "that" ||
+        oldTaskName === "this" ||
+        oldTaskName === "that task"
+    ) {
+        matchedTask = lastVoiceTask;
 
-        if (!title) return;
-
-        if (
-            title.includes(oldTaskName) ||
-            oldTaskName.includes(title)
-        ) {
-            matchedTask = task;
-        }
-    });
+    } else {
+        matchedTask = getBestMatchingTask(oldTaskName);
+    }
 
     if (!matchedTask) {
-
         showToast(`❌ Task not found: ${oldTaskName}`, "danger");
-
         return;
     }
+
+    // Save memory
+    lastVoiceTask = matchedTask;
 
     const taskId = matchedTask.dataset.id;
 
@@ -1676,17 +1829,58 @@ function executeVoiceEdit(oldTaskName, newTaskName) {
         credentials: "same-origin"
     })
     .then(() => {
-
         showToast("✏️ Task updated by voice", "success");
-
         updateDashboard();
     })
     .catch(err => {
-
         console.error(err);
-
         showToast("❌ Voice edit failed", "danger");
     });
+}
+
+// ============================
+// FUZZY TASK MATCHING
+// ============================
+
+function getBestMatchingTask(taskName) {
+
+    const tasks = document.querySelectorAll(".task");
+
+    let bestMatch = null;
+    let highestScore = 0;
+
+    tasks.forEach(task => {
+
+        const title =
+            task.querySelector(".task-title")
+            ?.innerText
+            ?.toLowerCase()
+            ?.trim();
+
+        if (!title) return;
+
+        let score = 0;
+
+        taskName
+            .toLowerCase()
+            .split(" ")
+            .forEach(word => {
+
+                if (title.includes(word)) {
+                    score++;
+                }
+
+            });
+
+        if (score > highestScore) {
+
+            highestScore = score;
+            bestMatch = task;
+        }
+
+    });
+
+    return bestMatch;
 }
 
 function executeVoiceTaskAction(taskName, action) {
@@ -1720,6 +1914,14 @@ function executeVoiceTaskAction(taskName, action) {
 
         return;
     }
+
+    const rememberedTitle =
+        matchedTask.querySelector(".task-title")
+        ?.innerText || "";
+
+    console.log("Voice matched:", rememberedTitle);
+
+    lastVoiceTask = matchedTask;
 
     const taskId = matchedTask.dataset.id;
 
@@ -2266,7 +2468,7 @@ function startSmartTaskTour() {
                 element: '#micBtn',
                 popover: {
                     title: 'Voice Commands 🎤',
-                    description: 'Tap the mic and say tasks naturally. Example: "Buy groceries tomorrow high priority. Complete, delete/remove, edit/change "Buy groceries" to "go to the market". "',
+                    description: 'Tap the mic and say tasks or commands naturally. Example: "Buy groceries tomorrow high priority. Complete, delete/remove, edit/change "Buy groceries" to "go to the market". Commands can aslo be said in "Twi", and "Pidgin" as well, eg "mewie / don finish, commot groceries / yi fi hɔ, change am.  "',
                     side: 'bottom'
                 }
             },
