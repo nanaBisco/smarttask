@@ -1470,13 +1470,21 @@ const deadlineInput = document.querySelector('input[name="deadline"]');
 let recognition;
 
 // ============================
+// VOICE CONTEXT MEMORY
+// ============================
+
+let lastVoiceTask = null;
+
+// ============================
 // MULTILINGUAL INTENT DICTIONARY
 // ============================
 
 const intentMap = {
 
     complete: [
+
         "complete",
+        "completed",
         "finished",
         "done",
         "mark done",
@@ -1484,33 +1492,65 @@ const intentMap = {
 
         // Twi
         "mewie",
-        "awie",
+        "mewie",
+        "mawie",
         "ma wie",
+        "awie",
         "awie no",
+        "mewie no",
+        "mede awie",
+
+        // Common speech recognition mistakes
+        "may we",
+        "me we",
+        "mary",
+        "meh we",
 
         // Pidgin
         "finish am",
         "don finish",
-        "don do am"
+        "adon finish",
+        "don do am",
+        "adon do am",
+        "i pleet",
+        "i pleet am",
+        "i don pleet am",
+        "adon pleet am",
+        "i finish am",
+        "i finish",
+        "done am"
     ],
 
     delete: [
+
         "delete",
         "remove",
         "cancel",
+        "clear",
+        "get rid of",
         "erase",
 
         // Pidgin
         "commot",
+        "commot am",
         "take am off",
         "clear am",
+        "cancel am",
 
         // Twi
+        "yi fi hɔ",
+        "yi fiho",
         "meyi no",
-        "yi fi hɔ"
-    ],
+        "popa no",
+
+        // Recognition mistakes
+        "efi ho",
+        "ye fi ho",
+        "yefiho"
+    ]
 
     edit: [
+
         "edit",
         "change",
         "update",
@@ -1518,7 +1558,13 @@ const intentMap = {
 
         // Pidgin
         "change am",
-        "adjust am"
+        "adjust",
+        "adjust am",
+
+        // Twi
+        "sesa",
+        "sesa no",
+        "sakyera"
     ]
 };
 
@@ -1532,6 +1578,17 @@ function detectIntent(text) {
 
             if (text.includes(keyword)) {
                 return intent;
+            }
+
+            const words = text.split(" ");
+
+            for (const word of words) {
+
+                if (
+                    word.startsWith(keyword.substring(0,4))
+                ) {
+                    return intent;
+                }
             }
         }
     }
@@ -1550,6 +1607,28 @@ function cleanTaskText(text) {
             cleaned =
                 cleaned.replace(keyword, "");
         });
+
+        cleaned =
+            cleaned
+                .replace(/\bit\b/g, "")
+                .replace(/\bam\b/g, "")
+                .replace(/\bthat\b/g, "")
+                .replace(/\bthis\b/g, "")
+                .trim();
+
+        cleaned =
+            cleaned
+                .replace("no", "")
+                .replace("ɛno", "")
+                .replace("eno", "")
+                .trim();
+
+        cleaned =
+            cleaned
+                .replace("am", "")
+                .replace("that one", "")
+                .replace("the one", "")
+                .trim();
 
     return cleaned.trim();
 }
@@ -1600,11 +1679,23 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
         const spokenText = transcript.toLowerCase();
 
+        let normalizedText = transcript.toLowerCase();
+
+        normalizedText =
+            normalizedText
+                .replace("may we", "mewie")
+                .replace("me we", "mewie")
+                .replace("mary", "mewie")
+                .replace("efi ho", "yi fi hɔ")
+                .replace("come out", "commot")
+                .replace("com ought", "commot")
+                .replace("yefiho", "yi fi hɔ");
+
         const intent =
-            detectIntent(spokenText);
+            detectIntent(normalizedText);
 
         const cleanedText =
-            cleanTaskText(spokenText);
+            cleanTaskText(normalizedText);
 
         console.log("Detected Intent:", intent);
         console.log("Cleaned Task:", cleanedText);
@@ -1928,6 +2019,22 @@ function executeVoiceTaskAction(taskName, action) {
 
     let matchedTask = null;
 
+    if (
+
+        (!taskName || taskName.trim() === "") &&
+
+        lastVoiceTask
+
+    ) {
+
+        showToast(
+            `🧠 Using previous task: ${lastVoiceTask.name}`,
+            "info"
+        );
+
+        taskName = lastVoiceTask.name;
+    }
+
     tasks.forEach(task => {
 
         const title =
@@ -1946,6 +2053,15 @@ function executeVoiceTaskAction(taskName, action) {
             matchedTask = task;
         }
     });
+
+    if (matchedTask) {
+
+        lastVoiceTask = {
+            id: matchedTask.dataset.id,
+            name: taskName
+        };
+
+    }
 
     if (!matchedTask) {
 
