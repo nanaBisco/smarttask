@@ -1578,6 +1578,8 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         if (isListening) return;
 
         try {
+            console.log("Starting speech recognition...");
+
             recognition.start();
             isListening = true;
 
@@ -1747,13 +1749,50 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     };
 
     recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
+
+        console.error(
+            "Speech recognition error:",
+            event.error
+        );
 
         micBtn.classList.remove("listening");
 
         isListening = false;
 
-        showToast("❌ Voice failed", "danger");
+        if (event.error === "not-allowed") {
+
+            showToast(
+                "🎤 Microphone permission denied",
+                "danger"
+            );
+
+            return;
+        }
+
+        if (event.error === "audio-capture") {
+
+            showToast(
+                "🎤 No microphone detected",
+                "danger"
+            );
+
+            return;
+        }
+
+        if (event.error === "network") {
+
+            showToast(
+                "🌐 Network issue detected",
+                "warning"
+            );
+
+            return;
+        }
+
+        showToast(
+            `❌ Voice error: ${event.error}`,
+            "danger"
+        );
     };
 
 } else {
