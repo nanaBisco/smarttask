@@ -1470,10 +1470,12 @@ const deadlineInput = document.querySelector('input[name="deadline"]');
 let recognition;
 
 // ============================
-// VOICE CONTEXT MEMORY
+// VOICE MEMORY
 // ============================
 
 let lastVoiceTask = null;
+
+let isListening = false;
 
 // ============================
 // MULTILINGUAL INTENT DICTIONARY
@@ -1632,14 +1634,6 @@ function cleanTaskText(text) {
 
     return cleaned.trim();
 }
-
-// ============================
-// VOICE MEMORY
-// ============================
-
-let lastVoiceTask = null;
-
-let isListening = false;
 
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
