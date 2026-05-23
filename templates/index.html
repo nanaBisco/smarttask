@@ -51,9 +51,12 @@ body {
 
 .container{
     max-width:700px;
-    width:90%;
+    width:calc(90% - 220px);
+
     margin:50px auto;
+
     padding:35px;
+
     border-radius:20px;
     background:var(--card-color);
     box-shadow:0 20px 50px rgba(0,0,0,0.25);
@@ -532,9 +535,6 @@ body:not(.dark-mode) .task:hover{
         height:200px;
     }
 
-    .container {
-        padding: 20px;
-    }
 }
 
 /* =========================
@@ -545,12 +545,30 @@ body:not(.dark-mode) .task:hover{
     /* Container adjustments */
     .container {
         margin: 20px auto;
+        margin-left: 70px;
+
         padding: 20px;
     }
 
     /* Forms stack vertically */
     form {
         flex-direction: column;
+    }
+
+    .sidebar{
+        width:70px;
+    }
+
+    .nav-link{
+        font-size:0;
+    }
+
+    .nav-link::before{
+        font-size:22px;
+    }
+
+    .container{
+        width:calc(100% - 90px);
     }
 
     input, select, button {
@@ -976,6 +994,7 @@ body.dark-mode .theme-btn {
         width: 100%;
         padding: 12px;
         box-sizing: border-box;
+        margin-left: 70px;
     }
 
     /* HEADER */
@@ -1123,6 +1142,18 @@ body.dark-mode .theme-btn {
     }
 }
 
+@media(max-width:768px){
+
+    .sidebar{
+        width:70px;
+    }
+
+    .container{
+        margin-left:70px;
+    }
+
+}
+
 /* =========================
    FLOATING HELP BUTTON
    ========================= */
@@ -1182,6 +1213,37 @@ body.dark-mode .theme-btn {
     }
 }
 
+.sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+
+    width:220px;
+    height:100vh;
+
+    background:#18181b;
+
+    display:flex;
+    flex-direction:column;
+
+    padding-top:20px;
+
+    z-index:9999;
+}
+
+.nav-link{
+    color:white;
+    text-decoration:none;
+
+    padding:14px 20px;
+
+    transition:.2s;
+}
+
+.nav-link:hover{
+    background:rgba(255,255,255,.08);
+}
+
 </style>
 
 <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
@@ -1190,6 +1252,22 @@ body.dark-mode .theme-btn {
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js/dist/driver.css"/>
 
 <script src="https://cdn.jsdelivr.net/npm/driver.js/dist/driver.js.iife.js"></script>
+
+<div class="sidebar">
+
+    <h3 class="logo">
+        ⚡ SmartTask
+    </h3>
+
+    <a href="/">🏠 Tasks</a>
+
+    <a href="/analytics">📊 Analytics</a>
+
+    <a href="/history">🕒 History</a>
+
+    <a href="/about">ℹ️ About</a>
+
+</div>
 
 <div class="container">
 
@@ -1264,15 +1342,6 @@ body.dark-mode .theme-btn {
 
     <!-- TASK LIST -->
     <div id="taskList"></div>
-
-    <!-- CHARTS -->
-    <div class="chart-card">
-        <h3>📊 Productivity Overview</h3>
-        <div class="chart-wrapper">
-            <canvas id="taskChart"></canvas>
-        </div>
-        <canvas id="weeklyChart" style="margin-top:20px;"></canvas>
-    </div>
 
 </div>
 <div id="toastContainer" style="position:fixed; top:20px; right:20px; z-index:999;"></div>

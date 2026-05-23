@@ -774,6 +774,24 @@ def index():
         vapid_public_key=VAPID_PUBLIC_KEY  # inject the VAPID key here
     )
 
+@app.route("/analytics")
+def analytics():
+    return render_template(
+        "analytics.html"
+    )
+
+@app.route("/about")
+def about():
+    return render_template(
+        "about.html"
+    )
+
+@app.route("/history")
+def history():
+    return render_template(
+        "history.html"
+    )
+
 # ----------------------------
 # AI TASK ADD
 # ----------------------------

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>📊 Analytics</h2>
+
+<div class="chart-container">
+
+    <canvas id="priorityChart"></canvas>
+
+</div>
+
+<div class="chart-container">
+
+    <canvas id="completionChart"></canvas>
+
+</div>
+
+<div class="chart-card">
+
+    <h3>📊 Productivity Overview</h3>
+
+    <div class="chart-wrapper">
+
+        <canvas id="taskChart"></canvas>
+
+    </div>
+
+    <canvas id="weeklyChart" style="margin-top:20px;"></canvas>
+
+</div>
+
+{% endblock %}
