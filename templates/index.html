@@ -1135,7 +1135,20 @@ body.dark-mode .theme-btn {
 @media(max-width:768px){
 
     .sidebar{
-        width:70px;
+
+        width:240px;
+
+        left:-260px;
+
+        top:15px;
+
+        bottom:15px;
+
+        padding:18px;
+    }
+
+    .sidebar.show{
+        left:10px;
     }
 }
 
@@ -1188,6 +1201,7 @@ body.dark-mode .theme-btn {
 }
 
 @media (max-width: 768px) {
+
     #helpTourBtn,
     .help-fab {
         position: fixed !important;
@@ -1196,9 +1210,14 @@ body.dark-mode .theme-btn {
         left: auto !important;
         top: auto !important;
     }
+
     #menuBtn{
-    left:auto;
-    right:15px;
+
+        left:auto !important;
+
+        right:15px !important;
+
+        top:20px !important;
     }
 }
 
@@ -1206,16 +1225,13 @@ body.dark-mode .theme-btn {
 
     position:fixed;
 
-    top:70px;
-    left:-280px;
+    top:20px;
 
-    width:250px;
+    bottom:20px;
 
-    height:85vh;
-    top:40px;
-    bottom:auto;
+    left:-320px;
 
-    max-height:80vh;
+    width:280px;
 
     overflow-y:auto;
 
@@ -1223,13 +1239,13 @@ body.dark-mode .theme-btn {
 
     flex-direction:column;
 
-    padding:20px;
+    padding:24px;
 
-    border-radius:18px;
+    border-radius:22px;
 
     background:var(--card-color);
 
-    box-shadow:0 10px 30px rgba(0,0,0,.25);
+    box-shadow:0 15px 40px rgba(0,0,0,.25);
 
     transition:.35s ease;
 
@@ -1237,7 +1253,7 @@ body.dark-mode .theme-btn {
 }
 
 .sidebar.show{
-    left:20px;
+    left:15px;
 }
 
 #menuBtn{
@@ -1297,13 +1313,66 @@ body.dark-mode .theme-btn {
 
 .sidebar-logo{
 
-    margin-bottom:25px;
+    text-align:center;
+
+    font-size:24px;
+
+    font-weight:800;
+
+    margin-bottom:4px;
+}
+
+.sidebar-header{
 
     text-align:center;
 
-    font-size:22px;
+    padding-bottom:18px;
 
-    font-weight:700;
+    border-bottom:1px solid rgba(255,255,255,.08);
+
+    margin-bottom:20px;
+}
+
+.sidebar-menu{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+}
+
+.sidebar-link{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    padding:14px 16px;
+
+    border-radius:14px;
+
+    text-decoration:none;
+
+    color:inherit;
+
+    transition:.25s ease;
+}
+
+.sidebar-link:hover{
+
+    background:rgba(255,255,255,.08);
+
+    transform:translateX(4px);
+}
+
+.sidebar-subtitle{
+
+    font-size:12px;
+
+    opacity:.65;
 }
 
 </style>
@@ -1321,17 +1390,34 @@ body.dark-mode .theme-btn {
 
 <div class="sidebar">
 
-    <h3 class="sidebar-logo">
-    ⚡ SmartTask
-    </h3>
+    <div class="sidebar-header">
+        <h3 class="sidebar-logo">⚡ SmartTask</h3>
+        <p class="sidebar-subtitle">Productivity Hub</p>
+    </div>
 
-    <a href="/">🏠 Tasks</a>
+    <nav class="sidebar-menu">
 
-    <a href="/analytics">📊 Analytics</a>
+        <a href="/" class="sidebar-link">
+            <span>🏠</span>
+            <span>Tasks</span>
+        </a>
 
-    <a href="/history">🕒 History</a>
+        <a href="/analytics" class="sidebar-link">
+            <span>📊</span>
+            <span>Analytics</span>
+        </a>
 
-    <a href="/about">ℹ️ About</a>
+        <a href="/history" class="sidebar-link">
+            <span>🕒</span>
+            <span>History</span>
+        </a>
+
+        <a href="/about" class="sidebar-link">
+            <span>ℹ️</span>
+            <span>About</span>
+        </a>
+
+    </nav>
 
 </div>
 
