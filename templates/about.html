@@ -2,47 +2,210 @@
 
 {% block content %}
 
-<div class="about-page">
+<style>
 
-    <div class="about-header">
+/* =========================
+   ABOUT PAGE WRAPPER
+========================= */
+
+.about-wrapper{
+
+    max-width:950px;
+
+    margin:60px auto;
+
+    padding:0 22px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:22px;
+}
+
+/* =========================
+   HERO SECTION
+========================= */
+
+.about-hero{
+
+    background:linear-gradient(135deg, rgba(99,102,241,.18), transparent);
+
+    padding:26px 22px;
+
+    border-radius:18px;
+
+    border:1px solid rgba(255,255,255,.08);
+
+    box-shadow:0 10px 30px rgba(0,0,0,.15);
+}
+
+.about-hero h2{
+
+    margin-bottom:10px;
+
+    font-size:24px;
+}
+
+.about-hero p{
+
+    opacity:.75;
+
+    line-height:1.6;
+}
+
+/* =========================
+   GRID LAYOUT
+========================= */
+
+.about-grid{
+
+    display:grid;
+
+    grid-template-columns:1fr;
+
+    gap:16px;
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.about-card{
+
+    background:var(--card-color);
+
+    padding:18px;
+
+    border-radius:16px;
+
+    box-shadow:0 8px 25px rgba(0,0,0,.15);
+
+    border:1px solid rgba(255,255,255,.06);
+
+    transition:.25s ease;
+}
+
+.about-card:hover{
+
+    transform:translateY(-3px);
+}
+
+/* =========================
+   BADGE
+========================= */
+
+.badge{
+
+    display:inline-block;
+
+    padding:6px 14px;
+
+    border-radius:999px;
+
+    background:rgba(99,102,241,.18);
+
+    font-weight:600;
+
+    font-size:13px;
+}
+
+/* =========================
+   LIST
+========================= */
+
+.about-card ul{
+
+    padding-left:18px;
+
+    margin-top:10px;
+}
+
+.about-card li{
+
+    margin:8px 0;
+
+    opacity:.85;
+}
+
+/* =========================
+   MOBILE FIX
+========================= */
+
+@media (max-width: 768px){
+
+    .about-wrapper{
+
+        margin:30px auto;
+
+        padding:0 14px;
+    }
+
+    .about-hero{
+
+        padding:18px 16px;
+    }
+
+    .about-card{
+
+        padding:14px;
+    }
+
+    .about-hero h2{
+
+        font-size:20px;
+    }
+}
+
+</style>
+
+<div class="about-wrapper">
+
+    <div class="about-hero">
 
         <h2>ℹ️ About SmartTask</h2>
 
-        <p class="about-tagline">
-            Intelligent task management built for speed, clarity, and natural interaction.
-        </p>
-
-    </div>
-
-    <div class="about-card">
-
-        <h3>🚀 Overview</h3>
-
         <p>
-            SmartTask is a modern productivity system designed to help you create, manage,
-            and analyze tasks using natural language, voice input, and smart automation.
+            SmartTask is an intelligent task manager built for speed, productivity,
+            and natural language task creation.
         </p>
 
     </div>
 
-    <div class="about-card">
+    <div class="about-grid">
 
-        <h3>📌 Version</h3>
+        <div class="about-card">
 
-        <p class="version-badge">v3.0.0</p>
+            <h3>🚀 Overview</h3>
 
-    </div>
+            <p>
+                SmartTask helps you manage tasks faster using natural language input,
+                voice commands, and smart analytics. It is designed for simplicity,
+                speed, and modern productivity workflows.
+            </p>
 
-    <div class="about-card">
+        </div>
 
-        <h3>✨ Features</h3>
+        <div class="about-card">
 
-        <ul class="about-list">
-            <li>Natural Language Task Creation</li>
-            <li>Voice Command Support</li>
-            <li>Analytics Dashboard</li>
-            <li>Dark & Light Theme Support</li>
-        </ul>
+            <h3>📌 Version</h3>
+
+            <div class="badge">v3.0.0</div>
+
+        </div>
+
+        <div class="about-card">
+
+            <h3>✨ Features</h3>
+
+            <ul>
+                <li>Natural Language Task Creation</li>
+                <li>Voice Command Support</li>
+                <li>Analytics Dashboard</li>
+                <li>Dark & Light Theme Support</li>
+            </ul>
+
+        </div>
 
     </div>
 
