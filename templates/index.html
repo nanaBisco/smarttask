@@ -557,9 +557,6 @@ body:not(.dark-mode) .task:hover{
         width:70px;
     }
 
-    .nav-link{
-        font-size:0;
-    }
 
     .nav-link::before{
         font-size:22px;
@@ -1199,6 +1196,10 @@ body.dark-mode .theme-btn {
         left: auto !important;
         top: auto !important;
     }
+    #menuBtn{
+    left:auto;
+    right:15px;
+    }
 }
 
 .sidebar{
@@ -1210,11 +1211,17 @@ body.dark-mode .theme-btn {
 
     width:250px;
 
-    height:auto;
+    height:85vh;
+    top:40px;
+    bottom:auto;
 
     max-height:80vh;
 
     overflow-y:auto;
+
+    display:flex;
+
+    flex-direction:column;
 
     padding:20px;
 
