@@ -1184,23 +1184,26 @@ body.dark-mode .theme-btn {
 
 @media (max-width: 768px){
 
-    [data-theme="light"] #themeBtn{
+    /* LIGHT THEME OVERRIDE ONLY */
+    body.light #themeBtn,
+    [data-theme="light"] #themeBtn,
+    .light #themeBtn {
 
-        background:rgba(0,0,0,.05) !important;
+        background: rgba(0, 0, 0, 0.04) !important;
+        border: 1px solid rgba(0, 0, 0, 0.12) !important;
+        color: #111 !important;
 
-        border:1px solid rgba(0,0,0,.12) !important;
+        /* improves visibility without changing layout */
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 
-        color:#111 !important;
     }
-}
 
-@media (max-width: 768px){
-
+    /* optional: improve icon visibility if you have one */
+    body.light #themeBtn svg,
     [data-theme="light"] #themeBtn svg,
-    [data-theme="light"] #themeBtn{
-
-        color:#111 !important;
-        fill:#111 !important;
+    .light #themeBtn svg {
+        fill: #111 !important;
+        stroke: #111 !important;
     }
 }
 
