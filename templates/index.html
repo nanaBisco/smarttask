@@ -1184,27 +1184,25 @@ body.dark-mode .theme-btn {
 
 @media (max-width: 768px) {
 
-    /* LIGHT THEME ONLY FIX */
-    body.light-theme #themeBtn,
-    html.light-theme #themeBtn,
-    [data-theme="light"] #themeBtn {
-
-        /* make it visible on light backgrounds */
-        background: rgba(0, 0, 0, 0.04) !important;
-        border: 1px solid rgba(0, 0, 0, 0.12) !important;
-
-        /* improve readability */
-        color: #111 !important;
+    /* DEFAULT MOBILE STYLE (unchanged feel) */
+    #themeBtn {
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.08);
     }
 
-    /* ensure icon also stays visible */
-    body.light-theme #themeIcon,
-    html.light-theme #themeIcon,
-    [data-theme="light"] #themeIcon {
+    /* LIGHT MODE OVERRIDE (covers ALL common setups) */
+    html[data-theme="light"] #themeBtn,
+    body[data-theme="light"] #themeBtn,
+    html.light #themeBtn,
+    body.light #themeBtn,
+    .light #themeBtn,
+    #app.light #themeBtn {
+
+        background: rgba(0, 0, 0, 0.06) !important;
+        border: 1px solid rgba(0, 0, 0, 0.15) !important;
         color: #111 !important;
     }
 }
-
 
 /* =========================
    FLOATING HELP BUTTON
