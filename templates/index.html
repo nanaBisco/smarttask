@@ -1186,16 +1186,23 @@ body.dark-mode .theme-btn {
 
     [data-theme="light"] #themeBtn{
 
-        background:rgba(0,0,0,.04);
+        background:rgba(0,0,0,.05) !important;
 
-        border:1px solid rgba(0,0,0,.12);
+        border:1px solid rgba(0,0,0,.12) !important;
 
-        color:#111;
-
+        color:#111 !important;
     }
-
 }
 
+@media (max-width: 768px){
+
+    [data-theme="light"] #themeBtn svg,
+    [data-theme="light"] #themeBtn{
+
+        color:#111 !important;
+        fill:#111 !important;
+    }
+}
 
 /* =========================
    FLOATING HELP BUTTON
