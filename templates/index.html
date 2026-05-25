@@ -1182,6 +1182,7 @@ body.dark-mode .theme-btn {
     }
 }
 
+
 /* =========================
    FLOATING HELP BUTTON
    ========================= */
@@ -1454,7 +1455,6 @@ body.dark-mode .theme-btn {
 
 @media (max-width: 768px) {
 
-    /* FORCE MOBILE LIGHT VISIBILITY */
     body:not(.dark) #themeBtn,
     html:not(.dark) #themeBtn,
     [data-theme="light"] #themeBtn,
@@ -1463,15 +1463,12 @@ body.dark-mode .theme-btn {
     .light #themeBtn,
     #app.light #themeBtn {
 
-        background: rgba(0, 0, 0, 0.08) !important;
-        border: 1px solid rgba(0, 0, 0, 0.2) !important;
-        color: #111 !important;
+        background: rgba(255,255,255,.06) !important;
+        border: 1px solid rgba(255,255,255,.08) !important;
 
-        /* keeps your layout untouched */
         box-shadow: none !important;
     }
 
-    /* icon safety */
     body:not(.dark) #themeIcon,
     html:not(.dark) #themeIcon,
     [data-theme="light"] #themeIcon,
@@ -1479,9 +1476,11 @@ body.dark-mode .theme-btn {
     html.light #themeIcon,
     .light #themeIcon,
     #app.light #themeIcon {
-        color: #111 !important;
+
+        color: inherit !important;
     }
 }
+
 
 </style>
 
