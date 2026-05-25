@@ -1210,27 +1210,36 @@ body.dark-mode .theme-btn {
         left: auto !important;
         top: auto !important;
     }
+}
 
+@media (max-width: 768px){
+
+    /* MENU BUTTON → RIGHT (far right) */
     #menuBtn{
 
-    top:10% !important;
+        position:fixed !important;
 
-    right:20px !important;
+        top:30px !important;
 
-    left:auto !important;
-
-    transform:translateY(-50%);
-    }
-
-    #themeBtn{
-
-        top:50% !important;
-
-        right:85px !important;
+        right:20px !important;
 
         left:auto !important;
 
-        transform:translateY(-50%);
+        z-index:10000;
+    }
+
+    /* THEME BUTTON → LEFT of menu */
+    #themeBtn{
+
+        position:fixed !important;
+
+        top:30px !important;
+
+        right:80px !important;
+
+        left:auto !important;
+
+        z-index:10000;
     }
 }
 
