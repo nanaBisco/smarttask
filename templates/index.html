@@ -1182,30 +1182,29 @@ body.dark-mode .theme-btn {
     }
 }
 
-@media (max-width: 768px){
+@media (max-width: 768px) {
 
-    /* LIGHT THEME OVERRIDE ONLY */
-    body.light #themeBtn,
-    [data-theme="light"] #themeBtn,
-    .light #themeBtn {
+    /* LIGHT THEME ONLY FIX */
+    body.light-theme #themeBtn,
+    html.light-theme #themeBtn,
+    [data-theme="light"] #themeBtn {
 
+        /* make it visible on light backgrounds */
         background: rgba(0, 0, 0, 0.04) !important;
         border: 1px solid rgba(0, 0, 0, 0.12) !important;
+
+        /* improve readability */
         color: #111 !important;
-
-        /* improves visibility without changing layout */
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-
     }
 
-    /* optional: improve icon visibility if you have one */
-    body.light #themeBtn svg,
-    [data-theme="light"] #themeBtn svg,
-    .light #themeBtn svg {
-        fill: #111 !important;
-        stroke: #111 !important;
+    /* ensure icon also stays visible */
+    body.light-theme #themeIcon,
+    html.light-theme #themeIcon,
+    [data-theme="light"] #themeIcon {
+        color: #111 !important;
     }
 }
+
 
 /* =========================
    FLOATING HELP BUTTON
@@ -1553,9 +1552,8 @@ body.dark-mode .theme-btn {
 
     <div style="display:flex; justify-content:space-between; align-items:center;">
         <h1>SmartTask</h1>
-        <div class="header-actions">
+    <div class="header-actions">
             
-    
 
     <button type="button" id="themeBtn" class="theme-btn" onclick="toggleTheme()">
 
