@@ -1152,6 +1152,36 @@ body.dark-mode .theme-btn {
     }
 }
 
+@media (max-width: 768px){
+
+    #themeBtn{
+
+        position: static !important;
+
+        width: 100%;
+
+        margin-top: auto;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: flex-start;
+
+        gap:12px;
+
+        padding:14px 16px;
+
+        border-radius:14px;
+
+        background:rgba(255,255,255,.06);
+
+        box-shadow:none;
+
+        border:1px solid rgba(255,255,255,.08);
+    }
+}
+
 /* =========================
    FLOATING HELP BUTTON
    ========================= */
@@ -1228,19 +1258,6 @@ body.dark-mode .theme-btn {
         z-index:10000;
     }
 
-    /* THEME BUTTON → LEFT of menu */
-    #themeBtn{
-
-        position:fixed !important;
-
-        top:30px !important;
-
-        right:80px !important;
-
-        left:auto !important;
-
-        z-index:10000;
-    }
 }
 
 .sidebar{
@@ -1411,6 +1428,30 @@ body.dark-mode .theme-btn {
     opacity:.65;
 }
 
+.theme-label{
+    margin-left:10px;
+    font-size:14px;
+}
+
+@media (min-width: 769px){
+
+    .theme-label{
+        display:none;
+    }
+}
+
+@media (max-width: 768px){
+
+    #themeBtn{
+
+        top:auto !important;
+
+        right:auto !important;
+
+        left:auto !important;
+    }
+}
+
 </style>
 
 <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
@@ -1492,9 +1533,13 @@ body.dark-mode .theme-btn {
     
 
     <button type="button" id="themeBtn" class="theme-btn" onclick="toggleTheme()">
-        <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="5" fill="currentColor"/>
-        </svg>
+
+    <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="5" fill="currentColor"/>
+    </svg>
+
+    <span class="theme-label">Toggle Theme</span>
+
     </button>
 </div>
     </div>
@@ -2999,16 +3044,8 @@ function startSmartTaskTour() {
                     description: 'Tap here to save your task.',
                     side: 'bottom'
                 }
-            },
-
-            {
-                element: '#themeBtn',
-                popover: {
-                    title: 'Theme Switch 🌙',
-                    description: 'Switch between light and dark modes anytime.',
-                    side: 'left'
-                }
             }
+
 
         ]
     });
