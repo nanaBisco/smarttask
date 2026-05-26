@@ -1155,9 +1155,7 @@ body.dark-mode .theme-btn {
 @media (max-width: 768px){
 
     /* DARK THEME ONLY */
-    body.dark #themeBtn,
-    html.dark #themeBtn,
-    [data-theme="dark"] #themeBtn {
+    body.dark-mode #themeBtn{
 
         position: static !important;
         width: 100%;
@@ -1178,13 +1176,7 @@ body.dark-mode .theme-btn {
     }
 
     /* LIGHT THEME ONLY */
-    body:not(.dark) #themeBtn,
-    html:not(.dark) #themeBtn,
-    [data-theme="light"] #themeBtn,
-    body.light #themeBtn,
-    html.light #themeBtn,
-    .light #themeBtn,
-    #app.light #themeBtn {
+    body:not(.dark-mode) #themeBtn{
 
         position: static !important;
         width: 100%;
@@ -1200,8 +1192,8 @@ body.dark-mode .theme-btn {
 
         background: #6366f1 !important;
         border: 1px solid rgba(8,2,2,.08) !important;
-
         color: white !important;
+
         box-shadow:none;
     }
 }
