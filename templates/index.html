@@ -1152,9 +1152,10 @@ body.dark-mode .theme-btn {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px){
 
-    #themeBtn {
+    /* DARK THEME (your original style) */
+    #themeBtn{
 
         position: static !important;
         width: 100%;
@@ -1163,46 +1164,31 @@ body.dark-mode .theme-btn {
         display: flex;
         align-items: center;
         justify-content: flex-start;
-        gap: 12px;
 
-        padding: 14px 16px;
-        border-radius: 14px;
+        gap:12px;
+        padding:14px 16px;
+        border-radius:14px;
 
-        background: rgba(255,255,255,.06) !important;
-        border: 1px solid rgba(255,255,255,.08) !important;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.08);
 
-        box-shadow: none !important;
+        box-shadow:none;
     }
-}
 
-@media (max-width: 768px) {
-
+    /* LIGHT THEME ONLY */
     body:not(.dark) #themeBtn,
     html:not(.dark) #themeBtn,
     [data-theme="light"] #themeBtn,
     body.light #themeBtn,
     html.light #themeBtn,
     .light #themeBtn,
-    #app.light #themeBtn {
+    #app.light #themeBtn{
 
-        background: rgba(255,255,255,.06) !important;
-        border: 1px solid rgba(255,255,255,.08) !important;
-
-        box-shadow: none !important;
-    }
-
-    body:not(.dark) #themeIcon,
-    html:not(.dark) #themeIcon,
-    [data-theme="light"] #themeIcon,
-    body.light #themeIcon,
-    html.light #themeIcon,
-    .light #themeIcon,
-    #app.light #themeIcon {
-
+        background: rgba(0,0,0,.04) !important;
+        border: 1px solid rgba(0,0,0,.08) !important;
         color: inherit !important;
     }
 }
-
 
 
 /* =========================
