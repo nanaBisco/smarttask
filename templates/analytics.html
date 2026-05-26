@@ -23,12 +23,9 @@
         padding: 8px 16px;
     }
 
-    .chart-wrapper,
-    .chart-container {
-
-        max-width:200px;
+    .chart-wrapper {
+        max-width: 200px;
         height:200px;
-        margin:20px auto;
     }
 }
 
@@ -46,43 +43,12 @@
 .chart-container{
     position: relative;
     width: 100%;
-    max-width: 280px;
-    height: 280px;
-    margin: 20px auto;
-}
-
-@media (min-width: 769px){
-
-    .chart-container{
-        max-width:320px;
-        height:320px;
-    }
-
-    .chart-wrapper{
-        max-width:320px;
-        height:320px;
-        margin:20px auto;
-    }
-
+    height: 320px;
+    margin-bottom: 20px;
 }
 
 .chart-container canvas{
     display:block;
-}
-
-.bar-chart-container{
-
-    width:100%;
-    max-width:900px;
-    height:320px;
-
-    margin:30px auto 0 auto;
-}
-
-.bar-chart-container canvas{
-
-    width:100% !important;
-    height:100% !important;
 }
 
 </style>
@@ -111,9 +77,10 @@
 
     </div>
 
-    <div class="bar-chart-container">
+    <div class="chart-container">
     <canvas id="weeklyChart"></canvas>
-    </div>
+
+</div>
 
 </div>
 
@@ -302,41 +269,28 @@ function updateWeeklyChart(labels, data) {
 
 function updateCompletionChart(completed, pending) {
 
-    if (!window.completionChart) return;
+    if (!completionChart) return;
 
-    window.completionChart.data.datasets[0].data = [
+    completionChart.data.datasets[0].data = [
         completed,
         pending
     ];
 
-    window.completionChart.update('none');
+    completionChart.update();
 }
-
-console.log(
-    "Completion Updated:",
-    completed,
-    pending
-);
 
 function updatePriorityChart(high, medium, low) {
 
-    if (!window.priorityChart) return;
+    if (!priorityChart) return;
 
-    window.priorityChart.data.datasets[0].data = [
+    priorityChart.data.datasets[0].data = [
         high,
         medium,
         low
     ];
 
-    window.priorityChart.update('none');
+    priorityChart.update();
 }
-
-console.log(
-    "Priority Updated:",
-    high,
-    medium,
-    low
-);
 
 // Make available globally
 window.updateTaskChart = updateTaskChart;
