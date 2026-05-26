@@ -1154,8 +1154,10 @@ body.dark-mode .theme-btn {
 
 @media (max-width: 768px){
 
-    /* DARK THEME (your original style) */
-    #themeBtn{
+    /* DARK THEME ONLY */
+    body.dark #themeBtn,
+    html.dark #themeBtn,
+    [data-theme="dark"] #themeBtn {
 
         position: static !important;
         width: 100%;
@@ -1169,7 +1171,7 @@ body.dark-mode .theme-btn {
         padding:14px 16px;
         border-radius:14px;
 
-        background: rgba(255,255,255,.06);
+        background: rgba(255,255,255,.06) !important;
         border: 1px solid rgba(255,255,255,.08) !important;
 
         box-shadow:none;
@@ -1182,11 +1184,25 @@ body.dark-mode .theme-btn {
     body.light #themeBtn,
     html.light #themeBtn,
     .light #themeBtn,
-    #app.light #themeBtn{
+    #app.light #themeBtn {
 
-        background: #6366f1;
-        border: 1px solid rgba(8, 2, 2, 0.08) !important;
-        color: white;
+        position: static !important;
+        width: 100%;
+        margin-top: auto;
+
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+
+        gap:12px;
+        padding:14px 16px;
+        border-radius:14px;
+
+        background: #6366f1 !important;
+        border: 1px solid rgba(8,2,2,.08) !important;
+
+        color: white !important;
+        box-shadow:none;
     }
 }
 
