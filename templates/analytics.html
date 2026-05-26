@@ -115,6 +115,11 @@ if (typeof Chart === 'undefined') {
     console.error("Chart.js failed to load");
 }
 
+// Initial chart update on page load
+document.addEventListener("DOMContentLoaded", () => {
+    scheduleChartUpdate(true);
+});
+
 // Charts
 document.addEventListener("DOMContentLoaded", function () {
 

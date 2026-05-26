@@ -1677,11 +1677,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initSocketListeners();
 });
 
-// Initial chart update on page load
-document.addEventListener("DOMContentLoaded", () => {
-    scheduleChartUpdate(true);
-});
-
 function toggleTheme() {
     const icon = document.getElementById("themeIcon");
     const btn = document.querySelector(".theme-btn");
