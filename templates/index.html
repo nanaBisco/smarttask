@@ -500,19 +500,6 @@ body:not(.dark-mode) .task:hover{
     text-align:center;
 }
 
-.chart-card{
-    background:var(--card-color);
-    padding:15px;
-    border-radius:14px;
-    margin-top:20px;
-}
-
-.chart-wrapper{
-    max-width:250px;
-    margin:20px auto 0 auto;
-    height:250px;
-}
-
 /* FLASH MESSAGES */
 .flash {
     padding:12px;
@@ -524,18 +511,6 @@ body:not(.dark-mode) .task:hover{
 .danger { background:#ef4444; }
 .warning { background:#f59e0b; }
 
-@media (max-width: 480px) {
-    .priority-high, .priority-medium, .priority-low {
-        font-size: 14px; 
-        padding: 8px 16px;
-    }
-
-    .chart-wrapper {
-        max-width: 200px;
-        height:200px;
-    }
-
-}
 
 /* =========================
    FULL MOBILE RESPONSIVENESS
@@ -599,17 +574,6 @@ button, input, select {
     .task-actions {
         flex-wrap: wrap;
         gap: 5px;
-    }
-
-    /* Charts resize */
-    .chart-wrapper {
-        max-width: 100%;
-        height: 200px;
-    }
-
-    #weeklyChart {
-        max-width: 100%;
-        height: 200px;
     }
 
     /* Priority tags smaller */
@@ -1154,9 +1118,7 @@ body.dark-mode .theme-btn {
 
 @media (max-width: 768px){
 
-    /* DARK THEME ONLY */
-    body.dark-mode #themeBtn{
-
+    #themeBtn{
         position: static !important;
         width: 100%;
         margin-top: auto;
@@ -1168,33 +1130,20 @@ body.dark-mode .theme-btn {
         gap:12px;
         padding:14px 16px;
         border-radius:14px;
-
-        background: rgba(255,255,255,.06) !important;
-        border: 1px solid rgba(255,255,255,.08) !important;
-
         box-shadow:none;
     }
 
-    /* LIGHT THEME ONLY */
+    /* DARK THEME */
+    body.dark-mode #themeBtn{
+        background: rgba(255,255,255,.06) !important;
+        border: 1px solid rgba(255,255,255,.08) !important;
+    }
+
+    /* LIGHT THEME */
     body:not(.dark-mode) #themeBtn{
-
-        position: static !important;
-        width: 100%;
-        margin-top: auto;
-
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-
-        gap:12px;
-        padding:14px 16px;
-        border-radius:14px;
-
         background: #6366f1 !important;
         border: 1px solid rgba(8,2,2,.08) !important;
         color: white !important;
-
-        box-shadow:none;
     }
 }
 
@@ -1472,7 +1421,6 @@ body.dark-mode .theme-btn {
 
 </style>
 
-<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
 <script src="{{ url_for('static', filename='js/confetti.js') }}"></script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js/dist/driver.css"/>
@@ -1671,27 +1619,6 @@ function urlBase64ToUint8Array(base64String) {
 // Call it on load
 subscribeUserToPush();
 
-// Debounce helper to batch chart updates
-let updateChartTimeout;
-function scheduleChartUpdate(force = false) {
-    if (updateChartTimeout) clearTimeout(updateChartTimeout);
-
-    const delay = force ? 0 : 200; // 0ms if forced, 200ms otherwise
-    updateChartTimeout = setTimeout(() => {
-        fetch("/api/tasks")
-            .then(res => {
-                if (!res.ok) throw new Error("Request failed");
-                return res.json();
-            })
-            .then(info => {
-                if (window.weeklyChart) {
-                    weeklyChart.data.labels = [...info.days];
-                    weeklyChart.data.datasets[0].data = [...info.weekly];
-                    weeklyChart.update();
-                }
-            });
-    }, delay);
-}
 
 // ----------------------------
 // SOCKET LISTENERS (FIXED)
@@ -2598,156 +2525,6 @@ document.getElementById('installBtn').addEventListener('click', async () => {
     }
 });
 
-// Charts
-document.addEventListener("DOMContentLoaded", function () {
-
-const priorityCtx = document.getElementById('priorityChart');
-const completionCtx = document.getElementById('completionChart');
-const taskCtx = document.getElementById('taskChart');
-const weeklyCtx = document.getElementById('weeklyChart');
-
-window.taskChart = null;
-window.weeklyChart = null;
-
-window.priorityChart = null;
-window.completionChart = null;
-
-if (priorityCtx && completionCtx) {
-
-    window.priorityChart = new Chart(priorityCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['High', 'Medium', 'Low'],
-            datasets: [{
-                data: [0, 0, 0],
-                backgroundColor: ['#ef4444', '#f59e0b', '#22c55e']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-
-    window.completionChart = new Chart(completionCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Completed', 'Pending'],
-            datasets: [{
-                data: [0, 0],
-                backgroundColor: ['#22c55e', '#ef4444']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-}
-
-if (taskCtx && weeklyCtx) {
-
-    window.taskChart = new Chart(taskCtx, {
-        type: 'doughnut',
-        data: {
-            labels:['Completed','Pending'],
-            datasets:[{
-                data:[0,0],
-                backgroundColor:['rgba(34,197,94,0.95)','rgba(239,68,68,0.95)'],
-                borderColor:['#22c55e','#ef4444'],
-                borderWidth:2,
-                hoverOffset:12
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '65%',
-            plugins: { legend: { position: 'bottom', labels:{ padding:15, usePointStyle:true } } }
-        }
-    });
-
-    window.weeklyChart = new Chart(weeklyCtx, {
-        type:'bar',
-        data:{ labels:[], datasets:[{label:'Tasks Completed', data:[], borderRadius:6, backgroundColor:'#6366f1'}] },
-        options:{ 
-            responsive:true,
-            animation:false,
-            plugins:{ legend:{ display:false } }, 
-            scales:{ 
-                y:{ 
-                    beginAtZero:true, 
-                    ticks:{ stepSize:1 }
-                } 
-            } 
-        }
-    });
-
-}
-
-function updateTaskChart(completed, pending) {
-    taskChart.data.datasets[0].data = [completed, pending];
-    taskChart.update();
-}
-
-function updateWeeklyChart(labels, data) {
-    console.log("Weekly Chart Updating:", labels, data);
-
-    if (!weeklyChart || !labels || !data) return;
-
-    weeklyChart.data.labels = [...labels];
-    weeklyChart.data.datasets[0].data = [...data];
-
-    weeklyChart.update();
-}
-
-function updateCompletionChart(completed, pending) {
-
-    if (!completionChart) return;
-
-    completionChart.data.datasets[0].data = [
-        completed,
-        pending
-    ];
-
-    completionChart.update();
-}
-
-function updatePriorityChart(high, medium, low) {
-
-    if (!priorityChart) return;
-
-    priorityChart.data.datasets[0].data = [
-        high,
-        medium,
-        low
-    ];
-
-    priorityChart.update();
-}
-
-// Make available globally
-window.updateTaskChart = updateTaskChart;
-window.updateWeeklyChart = updateWeeklyChart;
-window.updateCompletionChart = updateCompletionChart;
-window.updatePriorityChart = updatePriorityChart;
-
-});
-
-// Charts update
-        if (window.taskChart) {
-
-            window.taskChart.data.datasets[0].data = [
-                data.completed,
-                data.pending
-            ];
-
-            window.taskChart.update();
-        }
-        if (window.weeklyChart) {
-            updateWeeklyChart(data.days, data.weekly);
-        }
-
 // Dashboard updater
 function updateDashboard(){
     fetch('/api/tasks')
@@ -3096,9 +2873,6 @@ document.getElementById("logoutBtn").addEventListener("click", function(e){
     window.location.href = "/logout";
 });
 
-if (typeof Chart === 'undefined') {
-    console.error("Chart.js failed to load");
-}
 
 if (location.hostname === "localhost") {
     console.log("Debug info...");

@@ -2,6 +2,58 @@
 
 {% block content %}
 
+<style>
+
+    .chart-card{
+    background:var(--card-color);
+    padding:15px;
+    border-radius:14px;
+    margin-top:20px;
+}
+
+.chart-wrapper{
+    max-width:250px;
+    margin:20px auto 0 auto;
+    height:250px;
+}
+
+@media (max-width: 480px) {
+    .priority-high, .priority-medium, .priority-low {
+        font-size: 14px; 
+        padding: 8px 16px;
+    }
+
+    .chart-wrapper {
+        max-width: 200px;
+        height:200px;
+    }
+}
+
+/* Charts resize */
+.chart-wrapper {
+    max-width: 100%;
+    height: 200px;
+}
+
+#weeklyChart {
+    max-width: 100%;
+    height: 200px;
+}
+
+.chart-container{
+    position: relative;
+    width: 100%;
+    height: 300px;
+    margin-bottom: 20px;
+}
+
+.chart-container canvas{
+    width:100% !important;
+    height:100% !important;
+}
+
+</style>
+
 <h2>📊 Analytics</h2>
 
 <div class="chart-container">
@@ -26,8 +78,194 @@
 
     </div>
 
-    <canvas id="weeklyChart" style="margin-top:20px;"></canvas>
+    <div class="chart-container">
+    <canvas id="weeklyChart"></canvas>
 
 </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+
+<script>
+
+// Debounce helper to batch chart updates
+let updateChartTimeout;
+function scheduleChartUpdate(force = false) {
+    if (updateChartTimeout) clearTimeout(updateChartTimeout);
+
+    const delay = force ? 0 : 200; // 0ms if forced, 200ms otherwise
+    updateChartTimeout = setTimeout(() => {
+        fetch("/api/tasks")
+            .then(res => {
+                if (!res.ok) throw new Error("Request failed");
+                return res.json();
+            })
+            .then(info => {
+                if (window.weeklyChart) {
+                    weeklyChart.data.labels = [...info.days];
+                    weeklyChart.data.datasets[0].data = [...info.weekly];
+                    weeklyChart.update();
+                }
+            });
+    }, delay);
+}
+
+if (typeof Chart === 'undefined') {
+    console.error("Chart.js failed to load");
+}
+
+// Charts
+document.addEventListener("DOMContentLoaded", function () {
+
+const priorityCtx = document.getElementById('priorityChart');
+const completionCtx = document.getElementById('completionChart');
+const taskCtx = document.getElementById('taskChart');
+const weeklyCtx = document.getElementById('weeklyChart');
+
+window.taskChart = null;
+window.weeklyChart = null;
+
+window.priorityChart = null;
+window.completionChart = null;
+
+if (priorityCtx && completionCtx) {
+
+    window.priorityChart = new Chart(priorityCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['High', 'Medium', 'Low'],
+            datasets: [{
+                data: [0, 0, 0],
+                backgroundColor: ['#ef4444', '#f59e0b', '#22c55e']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    window.completionChart = new Chart(completionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'Pending'],
+            datasets: [{
+                data: [0, 0],
+                backgroundColor: ['#22c55e', '#ef4444']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+if (taskCtx && weeklyCtx) {
+
+    window.taskChart = new Chart(taskCtx, {
+        type: 'doughnut',
+        data: {
+            labels:['Completed','Pending'],
+            datasets:[{
+                data:[0,0],
+                backgroundColor:['rgba(34,197,94,0.95)','rgba(239,68,68,0.95)'],
+                borderColor:['#22c55e','#ef4444'],
+                borderWidth:2,
+                hoverOffset:12
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: { legend: { position: 'bottom', labels:{ padding:15, usePointStyle:true } } }
+        }
+    });
+
+    window.weeklyChart = new Chart(weeklyCtx, {
+        type:'bar',
+        data:{ labels:[], datasets:[{label:'Tasks Completed', data:[], borderRadius:6, backgroundColor:'#6366f1'}] },
+        options:{ 
+            responsive:true,
+            animation:false,
+            plugins:{ legend:{ display:false } }, 
+            scales:{ 
+                y:{ 
+                    beginAtZero:true, 
+                    ticks:{ stepSize:1 }
+                } 
+            } 
+        }
+    });
+
+}
+
+function updateTaskChart(completed, pending) {
+    taskChart.data.datasets[0].data = [completed, pending];
+    taskChart.update();
+}
+
+function updateWeeklyChart(labels, data) {
+    console.log("Weekly Chart Updating:", labels, data);
+
+    if (!weeklyChart || !labels || !data) return;
+
+    weeklyChart.data.labels = [...labels];
+    weeklyChart.data.datasets[0].data = [...data];
+
+    weeklyChart.update();
+}
+
+function updateCompletionChart(completed, pending) {
+
+    if (!completionChart) return;
+
+    completionChart.data.datasets[0].data = [
+        completed,
+        pending
+    ];
+
+    completionChart.update();
+}
+
+function updatePriorityChart(high, medium, low) {
+
+    if (!priorityChart) return;
+
+    priorityChart.data.datasets[0].data = [
+        high,
+        medium,
+        low
+    ];
+
+    priorityChart.update();
+}
+
+// Make available globally
+window.updateTaskChart = updateTaskChart;
+window.updateWeeklyChart = updateWeeklyChart;
+window.updateCompletionChart = updateCompletionChart;
+window.updatePriorityChart = updatePriorityChart;
+
+});
+
+// Charts update
+        if (window.taskChart) {
+
+            window.taskChart.data.datasets[0].data = [
+                data.completed,
+                data.pending
+            ];
+
+            window.taskChart.update();
+        }
+        if (window.weeklyChart) {
+            updateWeeklyChart(data.days, data.weekly);
+        }
+
+
+</script>
 
 {% endblock %}
