@@ -48,9 +48,7 @@
 }
 
 .chart-container canvas{
-    width: 100% !important;
-    height: 100% !important;
-    display: block;
+    display:block;
 }
 
 </style>
@@ -144,15 +142,16 @@ setTimeout(() => {
             data: {
                 labels: ['High', 'Medium', 'Low'],
                 datasets: [{
-                    data: [0, 0, 0],
+                    data: [1, 1, 1],
                     backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'],
-                    borderWidth:2,
-                    cutout: '60%'
+                    borderColor: '#ffffff',
+                    borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '60%',
                 plugins: {
                     legend: {
                         position: 'bottom'
@@ -161,19 +160,27 @@ setTimeout(() => {
             }
         });
 
+        console.log(
+            "Priority canvas size:",
+            priorityCtx.width,
+            priorityCtx.height
+        );
+
         window.completionChart = new Chart(completionCtx, {
             type: 'doughnut',
             data: {
                 labels: ['Completed', 'Pending'],
                 datasets: [{
-                    data: [0, 0],
+                    data: [1, 1],
                     backgroundColor: ['#22c55e', '#ef4444'],
-                    cutout: '60%'
+                    borderColor: '#ffffff',
+                    borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '60%',
                 plugins: {
                     legend: {
                         position: 'bottom'
@@ -181,6 +188,12 @@ setTimeout(() => {
                 }
             }
         });
+
+        console.log(
+            "Completion canvas size:",
+            completionCtx.width,
+            completionCtx.height
+        );
     }
 
     if (taskCtx && weeklyCtx) {
@@ -190,7 +203,7 @@ setTimeout(() => {
             data: {
                 labels:['Completed','Pending'],
                 datasets:[{
-                    data:[0,0],
+                    data:[1,1],
                     backgroundColor:['rgba(34,197,94,0.95)','rgba(239,68,68,0.95)'],
                     borderColor:['#22c55e','#ef4444'],
                     borderWidth:2,
@@ -201,6 +214,7 @@ setTimeout(() => {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '65%',
                 plugins: {
                     legend: {
                         position: 'bottom'
@@ -208,6 +222,12 @@ setTimeout(() => {
                 }
             }
         });
+
+        console.log(
+            "Task canvas size:",
+            taskCtx.width,
+            taskCtx.height
+        );
 
         window.weeklyChart = new Chart(weeklyCtx, {
             type:'bar',
