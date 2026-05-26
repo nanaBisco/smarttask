@@ -23,9 +23,12 @@
         padding: 8px 16px;
     }
 
-    .chart-wrapper {
-        max-width: 200px;
+    .chart-wrapper,
+    .chart-container {
+
+        max-width:200px;
         height:200px;
+        margin:20px auto;
     }
 }
 
@@ -43,12 +46,43 @@
 .chart-container{
     position: relative;
     width: 100%;
-    height: 320px;
-    margin-bottom: 20px;
+    max-width: 280px;
+    height: 280px;
+    margin: 20px auto;
+}
+
+@media (min-width: 769px){
+
+    .chart-container{
+        max-width:320px;
+        height:320px;
+    }
+
+    .chart-wrapper{
+        max-width:320px;
+        height:320px;
+        margin:20px auto;
+    }
+
 }
 
 .chart-container canvas{
     display:block;
+}
+
+.bar-chart-container{
+
+    width:100%;
+    max-width:900px;
+    height:320px;
+
+    margin:30px auto 0 auto;
+}
+
+.bar-chart-container canvas{
+
+    width:100% !important;
+    height:100% !important;
 }
 
 </style>
@@ -77,10 +111,9 @@
 
     </div>
 
-    <div class="chart-container">
+    <div class="bar-chart-container">
     <canvas id="weeklyChart"></canvas>
-
-</div>
+    </div>
 
 </div>
 
@@ -145,7 +178,8 @@ setTimeout(() => {
                     data: [1, 1, 1],
                     backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'],
                     borderColor: '#ffffff',
-                    borderWidth: 2
+                    borderWidth: 2,
+                    hoverOffset:12
                 }]
             },
             options: {
@@ -174,7 +208,8 @@ setTimeout(() => {
                     data: [1, 1],
                     backgroundColor: ['#22c55e', '#ef4444'],
                     borderColor: '#ffffff',
-                    borderWidth: 2
+                    borderWidth: 2,
+                    hoverOffset:12
                 }]
             },
             options: {
@@ -267,28 +302,41 @@ function updateWeeklyChart(labels, data) {
 
 function updateCompletionChart(completed, pending) {
 
-    if (!completionChart) return;
+    if (!window.completionChart) return;
 
-    completionChart.data.datasets[0].data = [
+    window.completionChart.data.datasets[0].data = [
         completed,
         pending
     ];
 
-    completionChart.update();
+    window.completionChart.update('none');
 }
+
+console.log(
+    "Completion Updated:",
+    completed,
+    pending
+);
 
 function updatePriorityChart(high, medium, low) {
 
-    if (!priorityChart) return;
+    if (!window.priorityChart) return;
 
-    priorityChart.data.datasets[0].data = [
+    window.priorityChart.data.datasets[0].data = [
         high,
         medium,
         low
     ];
 
-    priorityChart.update();
+    window.priorityChart.update('none');
 }
+
+console.log(
+    "Priority Updated:",
+    high,
+    medium,
+    low
+);
 
 // Make available globally
 window.updateTaskChart = updateTaskChart;
