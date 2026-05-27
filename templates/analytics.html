@@ -49,8 +49,8 @@
 @media (min-width: 769px){
 
     #weeklyChart{
-        max-width: 900px;
         margin: 0 auto;
+        display: block;
     }
 
 }
@@ -148,15 +148,21 @@ function scheduleChartUpdate(force = false) {
                     completionChart.update();
                 }
 
-                // Priority doughnut
-                if (window.priorityChart) {
-                    priorityChart.data.datasets[0].data = [
-                        info.high,
-                        info.medium,
-                        info.low
-                    ];
-                    priorityChart.update();
-                }
+                    // Priority doughnut
+                    if (window.priorityChart) {
+
+                        const high = Number(info.high) || 0;
+                        const medium = Number(info.medium) || 0;
+                        const low = Number(info.low) || 0;
+
+                        priorityChart.data.datasets[0].data = [
+                            high,
+                            medium,
+                            low
+                        ];
+
+                        priorityChart.update();
+                    }
 
             });
     }, delay);
