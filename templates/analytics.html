@@ -124,35 +124,38 @@ function scheduleChartUpdate(force = false) {
                     completionChart.update();
                 }
 
-                    // Priority doughnut
-                    if (window.priorityChart) {
+                // Priority doughnut
+                
+                if (window.priorityChart && info.tasks) {
 
-                        const high = Number(info.high) || 0;
-                        const medium = Number(info.medium) || 0;
-                        const low = Number(info.low) || 0;
+                    let high = 0;
+                    let medium = 0;
+                    let low = 0;
 
-                        const safeHigh = Number(info.high) || 0;
-                        const safeMedium = Number(info.medium) || 0;
-                        const safeLow = Number(info.low) || 0;
+                    info.tasks.forEach(task => {
 
-                        if (window.priorityChart && data.tasks) {
+                        const priority = (task.priority || "").toLowerCase();
 
-                            let high = 0;
-                            let medium = 0;
-                            let low = 0;
-
-                            data.tasks.forEach(task => {
-                                const p = (task.priority || "").toLowerCase();
-
-                                if (p === "high") high++;
-                                else if (p === "medium") medium++;
-                                else if (p === "low") low++;
-                            });
-
-                            priorityChart.data.datasets[0].data = [high, medium, low];
-                            priorityChart.update();
+                        if (priority === "high") {
+                            high++;
                         }
-                    }
+                        else if (priority === "medium") {
+                            medium++;
+                        }
+                        else if (priority === "low") {
+                            low++;
+                        }
+
+                    });
+
+                    priorityChart.data.datasets[0].data = [
+                        high,
+                        medium,
+                        low
+                    ];
+
+                    priorityChart.update();
+                }
 
             });
     }, delay);
