@@ -27,6 +27,11 @@
         max-width: 200px;
         height:200px;
     }
+
+    .doughnut-container{
+        height: 210px;
+        max-width: 220px;
+    }
 }
 
 /* Charts resize */
@@ -40,11 +45,28 @@
     height: 200px;
 }
 
+/* Desktop only */
+@media (min-width: 769px){
+
+    #weeklyChart{
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+}
+
 .chart-container{
     position: relative;
     width: 100%;
     height: 320px;
     margin-bottom: 20px;
+}
+
+/* Smaller doughnut charts */
+.doughnut-container{
+    height: 240px;
+    max-width: 280px;
+    margin: 0 auto 20px auto;
 }
 
 .chart-container canvas{
@@ -55,13 +77,13 @@
 
 <h2>📊 Analytics</h2>
 
-<div class="chart-container">
+<div class="chart-container doughnut-container">
 
     <canvas id="priorityChart"></canvas>
 
 </div>
 
-<div class="chart-container">
+<div class="chart-container doughnut-container">
 
     <canvas id="completionChart"></canvas>
 
@@ -100,11 +122,42 @@ function scheduleChartUpdate(force = false) {
                 return res.json();
             })
             .then(info => {
+
+                // Weekly chart
                 if (window.weeklyChart) {
                     weeklyChart.data.labels = [...info.days];
                     weeklyChart.data.datasets[0].data = [...info.weekly];
                     weeklyChart.update();
                 }
+
+                // Task doughnut
+                if (window.taskChart) {
+                    taskChart.data.datasets[0].data = [
+                        info.completed,
+                        info.pending
+                    ];
+                    taskChart.update();
+                }
+
+                // Completion doughnut
+                if (window.completionChart) {
+                    completionChart.data.datasets[0].data = [
+                        info.completed,
+                        info.pending
+                    ];
+                    completionChart.update();
+                }
+
+                // Priority doughnut
+                if (window.priorityChart) {
+                    priorityChart.data.datasets[0].data = [
+                        info.high,
+                        info.medium,
+                        info.low
+                    ];
+                    priorityChart.update();
+                }
+
             });
     }, delay);
 }
