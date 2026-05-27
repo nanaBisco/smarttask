@@ -53,6 +53,17 @@
     margin-bottom: 20px;
 }
 
+/* Center weekly chart only on desktop */
+@media (min-width: 769px){
+
+    .chart-card .chart-container{
+        max-width: 900px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+}
+
 /* Smaller doughnut charts */
 .doughnut-container{
     height: 240px;
@@ -125,7 +136,7 @@ function scheduleChartUpdate(force = false) {
                 }
 
                 // Priority doughnut
-                
+
                 if (window.priorityChart && info.tasks) {
 
                     let high = 0;
