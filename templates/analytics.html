@@ -135,13 +135,21 @@ function scheduleChartUpdate(force = false) {
                         const safeMedium = Number(info.medium) || 0;
                         const safeLow = Number(info.low) || 0;
 
-                        if (window.priorityChart) {
-                            priorityChart.data.datasets[0].data = [
-                                safeHigh,
-                                safeMedium,
-                                safeLow
-                            ];
+                        if (window.priorityChart && data.tasks) {
 
+                            let high = 0;
+                            let medium = 0;
+                            let low = 0;
+
+                            data.tasks.forEach(task => {
+                                const p = (task.priority || "").toLowerCase();
+
+                                if (p === "high") high++;
+                                else if (p === "medium") medium++;
+                                else if (p === "low") low++;
+                            });
+
+                            priorityChart.data.datasets[0].data = [high, medium, low];
                             priorityChart.update();
                         }
                     }
