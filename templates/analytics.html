@@ -48,11 +48,16 @@
 /* Desktop only */
 @media (min-width: 769px){
 
-    #weeklyChart{
-        margin: 0 auto;
-        display: block;
+    .chart-container:has(#weeklyChart){
+        width: 100%;
     }
 
+    #weeklyChart{
+        width: 100% !important;
+        height: 260px !important;
+        display: block;
+        margin: 0 auto;
+    }
 }
 
 .chart-container{
@@ -93,7 +98,6 @@
 
     <h3>📊 Productivity Overview</h3>
 
-
     <div class="chart-container">
     <canvas id="weeklyChart"></canvas>
     </div>
@@ -125,15 +129,6 @@ function scheduleChartUpdate(force = false) {
                     weeklyChart.update();
                 }
 
-                // Task doughnut
-                if (window.taskChart) {
-                    taskChart.data.datasets[0].data = [
-                        info.completed,
-                        info.pending
-                    ];
-                    taskChart.update();
-                }
-
                 // Completion doughnut
                 if (window.completionChart) {
                     completionChart.data.datasets[0].data = [
@@ -150,13 +145,18 @@ function scheduleChartUpdate(force = false) {
                         const medium = Number(info.medium) || 0;
                         const low = Number(info.low) || 0;
 
+                        const safeHigh = Number.isFinite(high) ? high : 0;
+                        const safeMedium = Number.isFinite(medium) ? medium : 0;
+                        const safeLow = Number.isFinite(low) ? low : 0;
+
                         priorityChart.data.datasets[0].data = [
-                            high,
-                            medium,
-                            low
+                            safeHigh,
+                            safeMedium,
+                            safeLow
                         ];
 
-                        priorityChart.update();
+                        // prevents “legend-only ghost state”
+                        priorityChart.render();
                     }
 
             });
@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 const priorityCtx = document.getElementById('priorityChart');
 const completionCtx = document.getElementById('completionChart');
-const taskCtx = document.getElementById('taskChart');
+const taskCtx = null;
 const weeklyCtx = document.getElementById('weeklyChart');
 
 window.taskChart = null;
@@ -251,38 +251,8 @@ setTimeout(() => {
         );
     }
 
-    if (taskCtx && weeklyCtx) {
+    if (weeklyCtx) {
 
-        window.taskChart = new Chart(taskCtx, {
-            type: 'doughnut',
-            data: {
-                labels:['Completed','Pending'],
-                datasets:[{
-                    data:[1,1],
-                    backgroundColor:['rgba(34,197,94,0.95)','rgba(239,68,68,0.95)'],
-                    borderColor:['#22c55e','#ef4444'],
-                    borderWidth:2,
-                    hoverOffset:12,
-                    cutout: '65%'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '65%',
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-
-        console.log(
-            "Task canvas size:",
-            taskCtx.width,
-            taskCtx.height
-        );
 
         window.weeklyChart = new Chart(weeklyCtx, {
             type:'bar',
@@ -304,10 +274,6 @@ setTimeout(() => {
 
 }, 80);
 
-function updateTaskChart(completed, pending) {
-    taskChart.data.datasets[0].data = [completed, pending];
-    taskChart.update();
-}
 
 function updateWeeklyChart(labels, data) {
     console.log("Weekly Chart Updating:", labels, data);
@@ -346,7 +312,6 @@ function updatePriorityChart(high, medium, low) {
 }
 
 // Make available globally
-window.updateTaskChart = updateTaskChart;
 window.updateWeeklyChart = updateWeeklyChart;
 window.updateCompletionChart = updateCompletionChart;
 window.updatePriorityChart = updatePriorityChart;
@@ -354,15 +319,7 @@ window.updatePriorityChart = updatePriorityChart;
 });
 
 // Charts update
-        if (window.taskChart) {
-
-            window.taskChart.data.datasets[0].data = [
-                data.completed,
-                data.pending
-            ];
-
-            window.taskChart.update();
-        }
+        
         if (window.weeklyChart) {
             updateWeeklyChart(data.days, data.weekly);
         }
