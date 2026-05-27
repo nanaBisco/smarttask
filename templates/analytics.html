@@ -49,15 +49,16 @@
 @media (min-width: 769px){
 
     .chart-container:has(#weeklyChart){
-        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
     }
 
     #weeklyChart{
         width: 100% !important;
         height: 260px !important;
         display: block;
-        margin: 0 auto;
     }
+
 }
 
 .chart-container{
@@ -145,18 +146,19 @@ function scheduleChartUpdate(force = false) {
                         const medium = Number(info.medium) || 0;
                         const low = Number(info.low) || 0;
 
-                        const safeHigh = Number.isFinite(high) ? high : 0;
-                        const safeMedium = Number.isFinite(medium) ? medium : 0;
-                        const safeLow = Number.isFinite(low) ? low : 0;
+                        const safeHigh = Number(info.high) || 0;
+                        const safeMedium = Number(info.medium) || 0;
+                        const safeLow = Number(info.low) || 0;
 
-                        priorityChart.data.datasets[0].data = [
-                            safeHigh,
-                            safeMedium,
-                            safeLow
-                        ];
+                        if (window.priorityChart) {
+                            priorityChart.data.datasets[0].data = [
+                                safeHigh,
+                                safeMedium,
+                                safeLow
+                            ];
 
-                        // prevents “legend-only ghost state”
-                        priorityChart.render();
+                            priorityChart.update();
+                        }
                     }
 
             });
